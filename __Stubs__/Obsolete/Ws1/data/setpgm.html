@@ -1,0 +1,54 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+  <link rel="icon" href="data:,">
+  <title>**Set Program**</title> 
+  <style type="text/css">
+		#pgs,#intv  {margin:0px; padding:4px; width:386px; border:1px solid blue;}
+		#intv				{display:none;font-size:24px}
+		#intv__				{font-size:24px}
+		h3					{text-align:center}
+		div					{margin:4px}
+		form				{width:fit-content; padding: 4px 0px 4px 0px}
+    canvas			{margin:4px;border:1px solid black}
+    input				{font-size:24px}
+		input.time	{width:80px;}
+		input.temp	{padding:8px;width:275px;vertical-align:middle}
+		#tempv			{width:45px; text-align:right;vertical-align:middle; background:none; border:none}
+		a {color:white; background-color:blue; margin:8px; padding: 4px 12px;	text-align:center; text-decoration:none; display:inline-block; border-radius:8px;}
+		a:hover			{color:orange;}
+  </style>
+</head>
+
+<body onload="tempv.value = temp.value; EntryPage(); ">
+	<div id="pgs">
+		<h3 id="testo">Seleziona il programma </h3>
+	  <canvas id="Bar0" height="80" width="180" onclick="SelPgm(0)"> </canvas> 
+	  <canvas id="Bar1" height="80" width="180" onclick="SelPgm(1)"> </canvas> <br />
+	  <canvas id="Bar2" height="80" width="180" onclick="SelPgm(2)"> </canvas> 
+	  <canvas id="Bar3" height="80" width="180" onclick="SelPgm(3)"> </canvas> <br />
+	  <canvas id="Bar4" height="80" width="180" onclick="SelPgm(4)"> </canvas> 
+	  <canvas id="Bar5" height="80" width="180" onclick="SelPgm(5)"> </canvas> <br />
+	  <canvas id="Bar6" height="80" width="180" onclick="SelPgm(6)"> </canvas> 
+	  <canvas id="Bar7" height="80" width="180" onclick="SelPgm(7)"> </canvas> <br />
+	</div>
+	<form >
+		<div id="intv">
+			<label> Dalle&nbsp;</label><input type="time" class="time" id="t1" name="t1" value="0:0"/>&nbsp;&nbsp;&nbsp;&nbsp;
+			<label> Alle &nbsp;</label><input type="time" class="time" id="t2" name="t2" value="0:0"/><br />
+			<input type="range" id="temp" class="temp" name="temp" min="5.0" max="25.0" step="0.1" oninput="tempv.value = temp.value"/>
+			<input id="tempv" name="tempv" value="?" >&#8451;<br />
+		<input type="button" value="Salva Programma"/> 
+		<input type="button" value="Conferma" onclick="ModifyPgm(t1.value, t2.value , temp.value * 10);"/>
+		</div>
+	</form>  <br />
+	<a href="index.html">Torna alla pagina principale</a>
+	
+
+  <script type="text/javascript" src="setpgm.js"></script>
+  
+</body>
+</html>
+

@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+  <link rel="icon" href="data:,">
+  <title>**Setup**</title>
+  <style type="text/css">
+		a {color:white; background-color:blue; padding: 8px 12px;	text-align:center; text-decoration:none; display:inline-block; border-radius:8px;}
+    table {caption-side: top; text-align: center; border:2px solid black; width: auto;}
+    td		{text-align: left; width: 50%;}
+    td.val {text-align: center; width: 50%;}
+    output.comms {font-family: 'Courier New'; font-size: small;}
+  </style>
+</head>
+<body onload="EntryPage('@3',true)" onunload="ExitPage()">
+  <h2> Impostazioni di sistema </h2>
+  <table>
+    <tbody>
+      <tr><td>Nuovo SSID    </td><td class="val"><input type="text" class="var" name="Wifi" id="Wifi" value=' ' /></td></tr>
+      <tr><td>Nuovo IP      </td><td class="val"><input type="text" class="var" name="IP"   id="IP"   value=' ' /></td></tr>
+      <tr><td>Nome HostName </td><td class="val"><input type="text" class="var" name="Host" id="Host" value=' ' /></td></tr>
+    </tbody>
+  </table>
+  <br />
+
+  <!--  <input type="button" id="btnwrite" value="Scrivi Dato I" onclick="WriteData('TmpI[1]', document.getElementById('setval').value);" /><br /> -->
+  <input type="button" id="btnsave" value="Salva Nuovi Valori" onclick="SaveSetup()" />
+  <output class="comms" id="comms" value=' '></output> <hr />
+  <a href="index.html">Torna alla pagina principale</a>
+  <script type="text/javascript" src="update.js"></script>
+</body>
+</html>
+

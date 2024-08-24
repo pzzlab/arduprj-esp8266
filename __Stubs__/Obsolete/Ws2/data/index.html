@@ -1,0 +1,105 @@
+﻿<!-- Main Page of WebServer --> 
+<!DOCTYPE html>
+<html>
+<head> 
+	<meta charset="utf-8"name="viewport" content="width=device-width"/>	
+	<link rel="icon" href="data:,">
+  <title>Domotico V1.0</title> 
+  <style type="text/css">
+	  body	{font-size:24px;}
+		a				{color:white;background-color:blue;margin:8px;padding:4px 12px;text-align:center;text-decoration:none;display:inline-block;border-radius:8px;}
+		a:hover {color:orange;}
+		#Now		{width:325px;display:inline-block;margin-left:8px; color:chocolate;}
+		#Tex		{Width:80px;color:maroon;text-align:right;display:inline-block;}
+		#tsm    {padding:4px;width:790px;border:1px solid blue;display:none;}
+		#tset		{width:400px;margin-top:8px}
+		#tman		{width:70px;}
+		#tsetv	{width:45px;vertical-align:baseline;background:none;border:none}
+		input		{font-size:24px;}
+		table		{margin:2px;caption-side:top;text-align:center;background-color:antiquewhite;border:2px solid black;width:800px;}
+		#pwrs		{font-size:16px; background-color:aquamarine;}
+		.pwrbars{border:none;}
+		td			{border:thin solid blue;text-align:center;}
+		td.name {width:220px;text-align:left;padding-left:6px;}
+		td.btn  {width:140px;font-size:20px;border:none;}
+		td.temp {width:140px;}
+		td.stat {width:160px;border:none;}
+		td.tset {width:10%;}
+		td.time {width:55px;}
+    #Comms,#Bootmsg	{font-family:'Courier New'; font-size:12px;}
+    canvas	{border:1px solid maroon;background-color:white;}
+  </style>
+</head>
+<body onload="EntryPage(0); " onunload="ExitPage();">
+	<h3><output id="Now"></output>Temperatura Esterna&nbsp;<output id="Tex" value="14.3"></output></h3>
+  <table>
+    <tbody>
+			<tr> <th>Zona</th><th>Att / Prg &#8451;</th><th>Min</th><th></th><th>Azione</th> </tr>
+			<tr>
+				<td class="name" id="Name0"></td><td class="temp" id="Temp0"></td><td class="time" id="Time0"></td>
+				<td class="stat"> <canvas id="Bar0" height="32" width="144"></canvas> <img id="On0" src="fuoco.png" /></td>
+				<td class="btn"><input type="button" id="Btn0" value ="Manuale" onclick="ManAutoBtn(0)"></td>
+			</tr>
+			<tr>
+				<td class="name" id="Name1"></td><td class="temp" id="Temp1"></td><td class="time" id="Time1"></td>
+				<td class="stat"> <canvas id="Bar1" height="32" width="144"></canvas> <img id="On1" src="fuoco.png" /></td>
+				<td class="btn"><input type="button" id="Btn1" value ="Manuale" onclick="ManAutoBtn(1)"></td>
+			</tr>
+			<tr>
+				<td class="name" id="Name2"></td><td class="temp" id="Temp2"></td><td class="time" id="Time2"></td>
+				<td class="stat"> <canvas id="Bar2" height="32" width="144"></canvas> <img id="On2" src="fuoco.png" /></td>
+				<td class="btn"><input type="button" id="Btn2" value ="Manuale" onclick="ManAutoBtn(2)"></td>
+			</tr>
+			<tr>
+				<td class="name" id="Name3"></td><td class="temp" id="Temp3"></td><td class="time" id="Time3"></td>
+				<td class="stat"> <canvas id="Bar3" height="32" width="144"></canvas> <img id="On3" src="fuoco.png" /></td>
+				<td class="btn"><input type="button" id="Btn3" value ="Manuale" onclick="ManAutoBtn(3)"></td>
+			</tr>
+			<tr>
+				<td class="name" id="Name4"></td><td class="temp" id="Temp4"></td><td class="time" id="Time4"></td>
+				<td class="stat"> <canvas id="Bar4" height="32" width="144"></canvas> <img id="On4" src="fuoco.png" /></td>
+				<td class="btn"><input type="button" id="Btn4" value ="Manuale" onclick="ManAutoBtn(4)"></td>
+			</tr>
+			<tr>
+				<td class="name" id="Name5"></td><td class="temp" id="Temp5"></td><td class="time" id="Time5"></td>
+				<td class="stat"> <canvas id="Bar5" height="32" width="144"></canvas> <img id="On5" src="fuoco.png" /></td>
+				<td class="btn"><input type="button" id="Btn5" value ="Manuale" onclick="ManAutoBtn(5)"></td>
+			</tr>
+    </tbody>
+  </table>
+	<form>
+  <table id="pwrs">
+    <tbody>
+			<tr>
+				<th id="Pn0">.</th><th id="Pn1">.</th><th id="Pn2">.</th><th id="Pn3">.</th>
+				<th id="Pn4">.</th><th id="Pn5">.</th><th id="Pn6">.</th><th id="Pn7">.</th> 
+			</tr>
+			<tr >
+				<td class="pwrbars"><canvas id="Pwr0" height="110" width="90"></canvas> </td>
+				<td class="pwrbars"><canvas id="Pwr1" height="110" width="90"></canvas> </td>
+				<td class="pwrbars"><canvas id="Pwr2" height="110" width="90"></canvas> </td>
+				<td class="pwrbars"><canvas id="Pwr3" height="110" width="90"></canvas> </td>
+				<td class="pwrbars"><canvas id="Pwr4" height="110" width="90"></canvas> </td>
+				<td class="pwrbars"><canvas id="Pwr5" height="110" width="90"></canvas> </td>
+				<td class="pwrbars"><canvas id="Pwr6" height="110" width="90"></canvas> </td>
+				<td class="pwrbars"><canvas id="Pwr7" height="110" width="90"></canvas> </td>
+			</tr>
+    </tbody>
+  </table>
+		<div id="tsm">
+			<input type="range" id="tset" class="tset" name="tset" min="5.0" max="25.0" step="0.1" value="15"oninput="tsetv.value = tset.value"/>
+			<input id="tsetv" name="tsetv" value="15" readonly><label> &#8451; &nbsp;</label>
+			<input type="number" id="tman" value="15" min="15" max="120" step="5"/> Min.&nbsp;&nbsp; 
+			<input type="button" value="Conferma" onclick="SetTman()"/>
+		</div><br />
+	</form>
+	<div class="btns">
+		<a onclick="GotoPage(1,'setpgm.html')" title="Temperature,zone,programmi">Modifica Dati</a>
+		<a onclick="GotoPage(0,'energy.html')" title="Entra nella gstione energia">Consumi</a>
+		<a onclick="GotoPage(2,'alarm.html')" title="Entra nell'antifurto'">Antifurto</a>
+		<output	id="Comms"></output><br />
+		<label  id="Bootmsg"></label>
+	</div>
+	<script type="text/javascript" src="index.js"></script>
+</body>
+</html>

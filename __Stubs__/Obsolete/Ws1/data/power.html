@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width"/> 
+  <link rel="icon" href="data:,">
+  <title>**Power**</title>
+  <style type="text/css">
+		a {color:white; background-color:blue; margin:8px; padding: 4px 12px;	text-align:center; text-decoration:none; display:inline-block; border-radius:8px;}
+    table {caption-side: top; text-align: center; background-color: antiquewhite; border: 2px solid black; font-size: x-large; width: 80%;}
+    td		{border: thin solid blue; text-align: left; width: 25%;}
+    td.um {width: 15%;}
+    td.val{text-align: center;}
+    output.comms {font-family: 'Courier New'; font-size: small;}
+  </style>
+</head>
+
+<body onload="EntryPage('@1',false)" onunload="ExitPage()">
+  <h2> Letture Principali </h2>
+  <table>
+    <caption>Info Letture primarie </caption>
+    <tbody>
+      <tr><td>Tensione        </td><td class="um"> [Vrms]</td><td class="val"><output class="var" id="Vrms" value=" "></output></td></tr>
+      <tr><td>Corrente        </td><td class="um"> [Arms]</td><td class="val"><output class="var" id="Arms" value=" "></output></td></tr>
+      <tr><td>Potenza Attiva  </td><td class="um"> [Wrms]</td><td class="val"><output class="var" id="Wrms" value=" "></output></td></tr>
+      <tr><td>Cos@            </td><td class="um"> [0..1]</td><td class="val"><output class="var" id="Cosf" value=" "></output></td></tr>
+      <tr><td>Energia Utilizz.</td><td class="um"> [Wh]  </td><td class="val"><output class="var" id="Wh  " value=" "></output></td></tr>
+      <tr><td>Max Potenza     </td><td class="um"> [Wrms]</td><td class="val"><output class="var" id="Wmax" value=" "></output></td></tr>
+      <tr><td>Tensione        </td><td class="um"> [Vrms]</td><td class="val"><output class="var" id="Vrms1" value=" "></output></td></tr>
+      <tr><td>Corrente        </td><td class="um"> [Arms]</td><td class="val"><output class="var" id="Arms1" value=" "></output></td></tr>
+      <tr><td>Potenza Attiva  </td><td class="um"> [Wrms]</td><td class="val"><output class="var" id="Wrms1" value=" "></output></td></tr>
+      <tr><td>Cos@            </td><td class="um"> [0..1]</td><td class="val"><output class="var" id="Cosf1" value=" "></output></td></tr>
+      <tr><td>Energia Utilizz.</td><td class="um"> [Wh]  </td><td class="val"><output class="var" id="Wh1  " value=" "></output></td></tr>
+      <tr><td>Max Potenza     </td><td class="um"> [Wrms]</td><td class="val"><output class="var" id="Wmax1" value=" "></output></td></tr>
+    </tbody>
+  </table><br />
+
+
+  <a href="index.html">Torna alla pagina principale</a>
+  <output class="comms" id="comms" value=' '></output>
+  <script type="text/javascript" src="update.js"></script>
+</body>
+</html>
+

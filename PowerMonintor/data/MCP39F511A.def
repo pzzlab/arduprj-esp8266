@@ -1,0 +1,44 @@
+;---- Current Voltage Power ----                
+02   RO   u16   SystemStatus                  
+04   RO   u16   SystemVersion                 
+06   RO   u16   VoltageRMS                    
+08   RO   u16   LineFrequency                 
+0A   RO   u16   ThermistorVoltage             
+0C   RO   i16   PowerFactor                   
+0E   RO   u32   CurrentRMS                    
+12   RO   u32   ActivePower                   
+16   RO   u32   ReactivePower                 
+;---- Energy ----                               
+1E   RO   u32   ImportEnergyActiveCounter     
+26   RO   u32   ExportEnergyActiveCounter     
+2E   RO   u32   ImportEnergyReactiveCounter   
+36   RO   u32   ExportEnergyReactiveCounter   
+;---- Calibration AC ----                       
+50   RW   u16   GainCurrentRMS                
+52   RW   u16   GainVoltageRMS                
+54   RW   u16   GainActivePower               
+56   RW   u16   GainReactivePower             
+5A   RW   i16   OffsetCurrentRMS              
+5C   RW   i16   OffsetActivePower             
+5E   RW   i16   OffsetReactivePower           
+60   RW   u16   GainLineFreq                  
+62   RW   i16   PhaseCompensation             
+;---- Adc Offsets ----                          
+7A   RW   u16   OFFCAL_MSB                    
+7C   RW   u16   OFFCAL_CH                     
+7E   RW   u16   OFFCAL_CH                     
+;---- Configuration ----                        
+94   RW   u32   SystemConfiguration           
+98   RW   u32   EventConfiguration            
+C0   RW   u16   Accumulation interval register
+; ---- Autocalibration ----                     
+9C   2   RW   u32   Range                     
+A0   2   RW   u32   CalibrationCurrent        
+A4   2   RW   u16   CalibrationVoltage        
+A6   2   RW   u32   CalibrationPowerActive    
+AA   2   RW   u32   CalibrationPowerReactive  
+BE   2   RW   u16   AppPowerDivisorDigits     
+C6   2   RW   u16   MinMaxPointer             
+C8   2   RW   u16   MinMaxPointer2            
+CA   2   RW   u16   LineFreqRef               
+CC   2   RW   u16   CalThermVolt              

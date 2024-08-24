@@ -1,0 +1,8 @@
+# Arduino GitIgonre 
+ArduinoSYS/
+*.bak
+*.lnk
+*.gz
+*.zip
+*.rar
+.history

@@ -1,0 +1,75 @@
+﻿<!-- Main Page of WebServer --> 
+<!DOCTYPE html>
+<html>
+<head> 
+	<meta charset="utf-8" name="viewport" content="width=device-width,initial-scale=1.0"/>	
+	<link rel="icon" href="data:,">
+  <title>Domotico V1.0</title> 
+  <style type="text/css">
+	  body		{font-size:20px;}
+		h3			{margin:4px;}
+		h2			{text-align:center;margin:0px;}
+		table		{background-color:antiquewhite;border:2px solid black; width:770px;font-size:24px;}
+		th			{text-align:center;}
+		td			{border:thin solid black;text-align:right;padding-right:2px;background-color:aquamarine;height:30px;}
+		select	{font-size:20px; margin-top:4px;}
+		#years	{width:70px;}
+		#btn0   {border:none;background-color:antiquewhite;position:relative;top:-4px;}
+		#btn1   {border:none;background-color:antiquewhite;position:relative;top:2px;}
+		th			{font-size:16px;}
+		.btna		{font-size:20px;margin:0px 5px;}
+		.pf			{width:45px;}
+		.a			{width:75px;}
+		.w			{width:100px;}
+		.t			{width:70px;}
+		.e			{width:110px}
+		#w0,#w1	{color:blue;}
+		#wmi0		{color:red;}
+		#wmi1		{color:red;}
+		#wmo0		{color:green;}
+		#wmo1		{color:green;}
+		#vhz		{color:green;width:200px;}
+		#now		{color:maroon;}
+		#cmd		{width:180px; color:blue;font-size:20px;}
+		#msg		{font:bold 16px arial;color:blue;}
+    #comms	{font-family:'Courier New'; font-size:12px;}
+    #chart	{border:thin solid lime;background-color:black;margin-top:4px;}
+  </style>
+</head>
+<body onload="EntryPage();">
+	<h3> PwrMon V1.0:<output id="vhz"></output>&nbsp;&nbsp;&nbsp;<output id="now"></output> </h3>
+<table id="tab">
+    <tbody>
+			<tr> 
+				<th>Cos&#934</th><th>A</th><th>W</th>
+				<th>Wmax In</th><th>Wmax Out</th><th>Ore</th><th>Wh In</th><th>Wh Out</th>
+			</tr>
+			<tr>
+				<td class="pf"id="pf0"></td><td class="a" id="a0"></td>
+				<td class="w" id="w0"></td><td class="w" id="wmi0"></td><td class="w" id="wmo0"></td>
+				<td class="t" id="t0"></td><td class="e" id="p0"></td><td class="e" id="q0"></td>
+				<td class="btn" id="btn0"><input type="button" value ="Reset" onclick="SendCmd(1)"></td>
+			</tr>
+			<tr>
+				<td class="pf "id="pf1"></td><td class="a" id="a1"></td>
+				<td class="w" id="w1"></td><td class="w" id="wmi1"></td><td class="w" id="wmo1"></td>
+				<td class="t" id="t1"></td><td class="e" id="p1"></td><td class="e" id="q1"></td>
+				<td class="btn" id="btn1"><input type="button" value ="Reset" onclick="SendCmd(2)"></td>
+			</tr>
+    </tbody>
+  </table>
+
+  <input class="btna" type="button" id="day" value="Oggi" onclick="LogTyp=0;Cyc=20;"/>
+  <select id="months" name="months" onclick="LogTyp=1;Cyc=20;"><option value="0">Mese Att.</option><option value="1">Mese Prec</option></select>
+  <select id="years"  name="years"  onclick="LogTyp=2;Cyc=20;"></select>
+  <input class="btna" type="button" id="nxt" value="<<" onclick="PlotChart(-1);"/>
+  <input class="btna" type="button" id="prv" value=">>" onclick="PlotChart(1);"/>
+	<label>Cmd: </label><input type="text" id="cmd" maxlength="16"/> 
+	<input class="btna" type="button" id="export" value="Salva" onclick="PlotChart(1);"/>
+	<output	id="comms"></output> <br />
+	<canvas id="chart" height="200" width="770" onclick="ChartClick()"></canvas><br/>
+	<label  id="msg"></label>
+
+	<script type="text/javascript" src="index.js"></script>
+</body>
+</html>

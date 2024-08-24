@@ -1,0 +1,191 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"name="viewport" content="width=device-width"/>	
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+  <link rel="icon" href="data:,">
+  <title>**Set Program**</title> 
+  <style type="text/css">
+		#intv				{margin:2px; padding:4px; width:fit-content; border:1px solid blue;}
+		h3					{margin-left:30px;}
+		div					{margin:4px}
+		form				{width:fit-content; padding: 4px 0px 4px 0px}
+    canvas			{margin:4px;border:1px solid black; background-color:white;}
+		table#zones	{margin:2px;caption-side:top;text-align:center;background-color:antiquewhite;border:2px solid black;width:fit-content;}
+		table#pgms	{margin:2px;caption-side:top;text-align:center;background-color:chocolate;border:2px solid black;width:fit-content;}
+		table#pwrs	{margin:2px;caption-side:top;text-align:center;background-color:aquamarine;border:2px solid black;width:fit-content;}
+		td.nz,td.pn	{width:30px;}
+		td.day			{width:30px;}
+		td.ofs			{width:90px;}
+		td.ofsv			{width:30px;}
+		td.zn				{width:220px;}
+    input				{font-size:24px;}
+		input.btn		{margin-left:8px;}
+		input.time	{margin-right:16px; font-size:18px;width:80px;}
+		input.ofs 	{font-size:18px;width:80px;}
+		input.pwd 	{font-size:18px;width:130px;}
+		input.day 	{font-size:18px;width:20px;text-align:center;}
+	  .zn,.pn			{font-size:18px;width:180px;text-align:left;}
+		input#temp	{font-size:18px;padding:8px;width:610px;vertical-align:middle}
+		input#tm 		{font-size:18px;padding:8px;width:450px;vertical-align:middle}
+		#tempv,#tmv	{width:50px; text-align:right;vertical-align:middle; background:none; border:none}
+		#tmv				{width:60px;}
+		#tmbtn			{width:65px;}
+		.ofsv,.pwrv	{font-size:18px;width:32px;text-align:center;vertical-align:top; background:none; border:none}
+		.lsel				{width:180px;font-size:18px;display:inline-block;}
+		input.sel   {width:30px;}
+		#intv,#pgms,#zones,#pwrs,#selec{display:none;font-size:24px}
+    #Bootmsg		{font-family:'Courier New'; font-size:12px;}
+		a {color:white; background-color:blue; margin:8px; padding: 4px 12px;	text-align:center; text-decoration:none; display:inline-block; border-radius:8px;}
+		a:hover			{color:orange;}
+  </style>
+</head>
+
+<body onload="tempv.value = temp.value; EntryPage();">
+	<div id="selec">
+		<input class="sel" type="radio" id="selpgm" name="sel" onclick="SelFun(1)"/><label class="lsel" for="selpgm"> Modifica Programma</label>
+		<input class="sel" type="radio" id="selpgz" name="sel" onclick="SelFun(2)"/><label class="lsel" for="selpgz"> Modifica Prog/Zona</label>
+		<input class="sel" type="radio" id="seloth" name="sel" onclick="SelFun(3)"/><label class="lsel" for="seloth"> Modifica Nome Zona</label>
+		<input class="sel" type="radio" id="selnzp" name="sel" onclick="SelFun(4)"/><label class="lsel" for="selnzp"> Modifica Potenze </label>
+	</div>
+	<h3 id="testo">Inserisci Password per accedere alle modifiche</h3>
+	<div id="access">
+			<input class="pwd" id="pwd" type="password" maxlength="12"/>
+			<input class="btn"type="submit" value="Accedi" onclick="SendCmd(16)"/>
+		</div>
+  <table id="pgms">
+    <tbody>
+			<tr>
+				<td> <canvas id="Bar0" height="80" width="168" onclick="SelPgm(0)"> </canvas> </td>
+				<td> <canvas id="Bar1" height="80" width="168" onclick="SelPgm(1)"> </canvas> </td> 
+				<td> <canvas id="Bar2" height="80" width="168" onclick="SelPgm(2)"> </canvas> </td> 
+				<td> <canvas id="Bar3" height="80" width="168" onclick="SelPgm(3)"> </canvas> </td> 
+			</tr>
+			<tr>
+				<td> <canvas id="Bar4" height="80" width="168" onclick="SelPgm(4)"> </canvas> </td> 
+				<td> <canvas id="Bar5" height="80" width="168" onclick="SelPgm(5)"> </canvas> </td> 
+				<td> <canvas id="Bar6" height="80" width="168" onclick="SelPgm(6)"> </canvas> </td> 
+				<td> <canvas id="Bar7" height="80" width="168" onclick="SelPgm(7)"> </canvas> </td>
+			</tr>
+    </tbody>
+  </table>
+
+	
+  <table id="zones">
+    <tbody>
+			<tr><th>N&deg;</th><th> Descrizione</th><th>Delta</th><th> &#8451;</th><th>Dom</th><th>Lun</th><th>Mar</th><th>Mer</th><th>Gio</th><th>Ven</th><th>Sab</th></tr>
+			<tr >
+				<td class="nz"> 1 </td><td class="zn"><input class="zn" id="zname0" maxlength="15" readonly oninput="ToSave |= 0x2;"></td>
+				<td class="ofs"><input class="ofs" id="ofs0" type="range" min="-3.0" max="2.0" step="0.5" oninput="ofsv0.value = ofs0.value; ToSave |= 0x4;"> </td>
+				<td><input class="ofsv"id="ofsv0"value="0" ><br /></td> 
+				<td><input class="day" id="zp00" readonly onclick="SelPgmZn(0,0)"> </td>	<td> <input class="day" id="zp01" readonly onclick="SelPgmZn(0,1)"> </td>
+				<td><input class="day" id="zp02" readonly onclick="SelPgmZn(0,2)"> </td>	<td> <input class="day" id="zp03" readonly onclick="SelPgmZn(0,3)"> </td>
+				<td><input class="day" id="zp04" readonly onclick="SelPgmZn(0,4)"> </td>	<td> <input class="day" id="zp05" readonly onclick="SelPgmZn(0,5)"> </td>
+				<td><input class="day" id="zp06" readonly onclick="SelPgmZn(0,6)"> </td>
+			</tr>
+			<tr >
+				<td class="nz"> 2 </td><td class="zn"><input class="zn" id="zname1" maxlength="15" readonly oninput="ToSave |= 0x2;"></td>
+				<td class="ofs"><input class="ofs" id="ofs1" type="range" min="-3.0" max="2.0" step="0.5" oninput="ofsv1.value = ofs1.value; ToSave |= 0x4;"> </td>
+				<td><input class="ofsv"id="ofsv1"value="0" ><br /></td> 
+				<td><input class="day" id="zp10" readonly onclick="SelPgmZn(1,0)"> </td>	<td> <input class="day" id="zp11" readonly onclick="SelPgmZn(1,1)"> </td>
+				<td><input class="day" id="zp12" readonly onclick="SelPgmZn(1,2)"> </td>	<td> <input class="day" id="zp13" readonly onclick="SelPgmZn(1,3)"> </td>
+				<td><input class="day" id="zp14" readonly onclick="SelPgmZn(1,4)"> </td>	<td> <input class="day" id="zp15" readonly onclick="SelPgmZn(1,5)"> </td>
+				<td><input class="day" id="zp16" readonly onclick="SelPgmZn(1,6)"> </td>
+			</tr>
+			<tr >
+				<td class="nz"> 3 </td><td class="zn"><input class="zn" id="zname2" maxlength="15" readonly oninput="ToSave |= 0x2;"></td>
+				<td class="ofs"><input class="ofs" id="ofs2" type="range" min="-3.0" max="2.0" step="0.5" oninput="ofsv2.value = ofs2.value; ToSave |= 0x4;"> </td>
+				<td><input class="ofsv"id="ofsv2"value="0" ><br /></td> 
+				<td><input class="day" id="zp20" readonly onclick="SelPgmZn(2,0)"> </td>	<td> <input class="day" id="zp21" readonly onclick="SelPgmZn(2,1)"> </td>
+				<td><input class="day" id="zp22" readonly onclick="SelPgmZn(2,2)"> </td>	<td> <input class="day" id="zp23" readonly onclick="SelPgmZn(2,3)"> </td>
+				<td><input class="day" id="zp24" readonly onclick="SelPgmZn(2,4)"> </td>	<td> <input class="day" id="zp25" readonly onclick="SelPgmZn(2,5)"> </td>
+				<td><input class="day" id="zp26" readonly onclick="SelPgmZn(2,6)"> </td>
+			</tr>
+			<tr >
+				<td class="nz"> 4 </td><td class="zn"><input class="zn" id="zname3" maxlength="15" readonly oninput="ToSave |= 0x2;"></td>
+				<td class="ofs"><input class="ofs" id="ofs3" type="range" min="-3.0" max="2.0" step="0.5" oninput="ofsv3.value = ofs3.value; ToSave |= 0x4;"> </td>
+				<td><input class="ofsv"id="ofsv3"value="0" ><br /></td> 
+				<td><input class="day" id="zp30" readonly onclick="SelPgmZn(3,0)"> </td>	<td> <input class="day" id="zp31" readonly onclick="SelPgmZn(3,1)"> </td>
+				<td><input class="day" id="zp32" readonly onclick="SelPgmZn(3,2)"> </td>	<td> <input class="day" id="zp33" readonly onclick="SelPgmZn(3,3)"> </td>
+				<td><input class="day" id="zp34" readonly onclick="SelPgmZn(3,4)"> </td>	<td> <input class="day" id="zp35" readonly onclick="SelPgmZn(3,5)"> </td>
+				<td><input class="day" id="zp36" readonly onclick="SelPgmZn(3,6)"> </td>
+			</tr>
+			<tr >
+				<td class="nz"> 5 </td><td class="zn"><input class="zn" id="zname4" maxlength="15" readonly oninput="ToSave |= 0x2;"></td>
+				<td class="ofs"><input class="ofs" id="ofs4" type="range" min="-3.0" max="2.0" step="0.5" oninput="ofsv4.value = ofs4.value; ToSave |= 0x4;"> </td>
+				<td><input class="ofsv"id="ofsv4"value="0" ><br /></td> 
+				<td><input class="day" id="zp40" readonly onclick="SelPgmZn(4,0)"> </td>	<td> <input class="day" id="zp41" readonly onclick="SelPgmZn(4,1)"> </td>
+				<td><input class="day" id="zp42" readonly onclick="SelPgmZn(4,2)"> </td>	<td> <input class="day" id="zp43" readonly onclick="SelPgmZn(4,3)"> </td>
+				<td><input class="day" id="zp44" readonly onclick="SelPgmZn(4,4)"> </td>	<td> <input class="day" id="zp45" readonly onclick="SelPgmZn(4,5)"> </td>
+				<td><input class="day" id="zp46" readonly onclick="SelPgmZn(4,6)"> </td>
+			</tr>
+			<tr >
+				<td class="nz"> 6 </td><td class="zn"><input class="zn" id="zname5" maxlength="15" readonly oninput="ToSave |= 0x2;"></td>
+				<td class="ofs"><input class="ofs" id="ofs5" type="range" min="-3.0" max="2.0" step="0.5" oninput="ofsv5.value = ofs5.value; ToSave |= 0x4;"> </td>
+				<td><input class="ofsv"id="ofsv5"value="0" ><br /></td> 
+				<td><input class="day" id="zp50" readonly onclick="SelPgmZn(5,0)"> </td>	<td> <input class="day" id="zp51" readonly onclick="SelPgmZn(5,1)"> </td>
+				<td><input class="day" id="zp52" readonly onclick="SelPgmZn(5,2)"> </td>	<td> <input class="day" id="zp53" readonly onclick="SelPgmZn(5,3)"> </td>
+				<td><input class="day" id="zp54" readonly onclick="SelPgmZn(5,4)"> </td>	<td> <input class="day" id="zp55" readonly onclick="SelPgmZn(5,5)"> </td>
+				<td><input class="day" id="zp56" readonly onclick="SelPgmpn(5,6)"> </td>
+			</tr>
+    </tbody>
+  </table>
+
+  <table id="pwrs">
+    <tbody>
+			<tr><th>N&deg;</th><th> Descrizione Zona</th><th>Potenza Max [Kw]</th></tr>
+			<tr >
+				<td class="np"> 1 </td><td><input class="pn" id="pname0" maxlength="12" readonly oninput="ToSave |= 0x8;"></td>
+				<td class="pwr"><input class="pwr" id="pwr0" type="range" min="1" max="4" step="0.5" oninput="pwrv0.value = pwr0.value; ToSave |= 0x10;"> </td>
+				<td><input class="pwrv"id="pwrv0"value="0" ><br /></td> 
+			</tr>
+			<tr >
+				<td class="np"> 2 </td><td><input class="pn" id="pname1" maxlength="12" readonly oninput="ToSave |= 0x8;"></td>
+				<td class="pwr"><input class="pwr" id="pwr1" type="range" min="1" max="4" step="0.5" oninput="pwrv1.value = pwr1.value; ToSave |= 0x10;"> </td>
+				<td><input class="pwrv"id="pwrv1"value="0" ><br /></td> 
+			</tr>
+			<tr >
+				<td class="np"> 3 </td><td><input class="pn" id="pname2" maxlength="12" readonly oninput="ToSave |= 0x8;"></td>
+				<td class="pwr"><input class="pwr" id="pwr2" type="range" min="1" max="4" step="0.5" oninput="pwrv2.value = pwr2.value; ToSave |= 0x10;"> </td>
+				<td><input class="pwrv"id="pwrv2"value="0" ><br /></td> 
+			</tr>
+			<tr >
+				<td class="np"> 4 </td><td><input class="pn" id="pname3" maxlength="12" readonly oninput="ToSave |= 0x8;"></td>
+				<td class="pwr"><input class="pwr" id="pwr3" type="range" min="1" max="4" step="0.5" oninput="pwrv3.value = pwr3.value; ToSave |= 0x10;"> </td>
+				<td><input class="pwrv"id="pwrv3"value="0" ><br /></td> 
+			</tr>
+			<tr >
+				<td class="np"> 5 </td><td><input class="pn" id="pname4" maxlength="12" readonly oninput="ToSave |= 0x8;"></>
+				<td class="pwr"><input class="pwr" id="pwr4" type="range" min="1" max="4" step="0.5" oninput="pwrv4.value = pwr4.value; ToSave |= 0x10;"> </td>
+				<td><input class="pwrv"id="pwrv4"value="0" ><br /></td> 
+			</tr>
+			<tr >
+				<td class="np"> 6 </td><td><input class="pn" id="pname5" maxlength="12" readonly oninput="ToSave |= 0x8;"></>
+				<td class="pwr"><input class="pwr" id="pwr5" type="range" min="1" max="4" step="0.5" oninput="pwrv5.value = pwr5.value; ToSave |= 0x10;"> </td>
+				<td><input class="pwrv"id="pwrv5"value="0" ><br /></td> 
+			</tr>
+    </tbody>
+  </table>
+	
+	<form >
+		<div id="intv">
+			<input type="range" id="temp" name="temp" min="5.0" max="25.0" step="0.1" oninput="tempv.value = temp.value;"/>
+			<input id="tempv" name="tempv" value="?" >&#8451;<br />
+			<input id="tmbtn" class="btn" type="button" value="Dalle" onclick="ModPgm();"/>
+			<input type="range" id="tm" name="tm" min="0.0" max="1410" step="30" value="0" 
+						 oninput="tmv.value = Math.floor(tm.value / 60) + ':' + String(tm.value % 60).padStart(2,'0'); if (tmbtn.value == 'Alle') tmbtn.value = 'OK'"/>
+			<input id="tmv" name="tmv" value="0:0" >
+			
+			<input class="btn"type="button" value="Fine" onclick="SelFun(0)"/><br />
+		</div>
+	</form><br />
+	<a onclick="Cyc = 10;">Torna alla pagina principale</a>  <br />
+	<input class="btn"type="submit" value="comando 1" onclick="SendCmd(1)"/>
+
+	<label  id="Bootmsg"></label>
+	
+  <script type="text/javascript" src="setpgm.js"></script>
+  
+</body>
+</html>
+
