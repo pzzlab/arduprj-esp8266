@@ -255,7 +255,7 @@ void TWebSrv::Parse(AsyncWebServerRequest *request)
   // Not found , error
   if (n < 0)  
      {
-      request->send(200, "text/plain",request->getParam(0)->name() + " >> Not Found"); 
+      request->send(400, "text/plain"," Var: <" + request->getParam(0)->name() + "> Not Found"); 
       if (Verbose & 0x2) Serial.printf("Var %s Not Found\n",a);
       return;
      }
@@ -432,8 +432,8 @@ void TWebSrv::ReadVar(AsyncWebServerRequest *request, short idx)
   if (Verbose & 0x2) Serial.printf("Cmd: %hhd (%s)\n",Cmd.Code, p);
 
   strncpy(Cmd.Txt,p,sizeof(Cmd.Txt)-1); Cmd.Txt[sizeof(Cmd.Txt)-1] = 0;
-  // Commands 0x00..0x3f if callback,tranfer out (Code == 1: terminal command, 2= generic cmd with arg)
-  if (CmdCb && (Cmd.Code < 0x40)) 
+  // Commands 0..99 if callback,tranfer out (Code == 1: terminal command, 2= generic cmd with arg)
+  if (CmdCb && (Cmd.Code < 100)) 
       {
        if (CmdCb(Cmd.Code, Cmd.Txt))  request->send(200, "text/plain", "Ok");
         else                          request->send(200, "text/plain", Cmd.Txt);

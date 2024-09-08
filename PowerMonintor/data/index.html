@@ -6,7 +6,7 @@
 	<link rel="icon" href="data:,">
   <title>PwrMon V1.0 By P.F.</title> 
   <style type="text/css">
-	  body		{font:bold 20px arial;}
+	  body		{font:bold 20px arial;} 
 		table		{background-color:antiquewhite;border:2px solid black; width:770px;}
 		th			{text-align:center;}
 		td			{border:thin solid black;text-align:right;padding-right:2px;background-color:aquamarine;height:30px;}
@@ -22,11 +22,13 @@
 		.e			{color:deeppink; width:110px}
 		.hist		{font: bold 12px 'Courier New';color:darkmagenta;}
 		.htxt		{display: none;}
+		.navbtn {font:bold 24px arial;color:blueviolet;position:relative;top: -4px;}
+		#bkbtn  {top:-48px; left: -108px;}
+		#fwbtn  {top:-48px; left: -92px;}
 		#srvc		{display: none;}
-		#usr		{display: none;}
+		#usrx		{display: none;}
 		#years	{width:70px;}
 		#cmd		{width:590px;color:maroon;font:bold 14px 'Courier New'; margin-top:4px;}
-		#msg		{font:bold 18px arial;color:blue;}
 		#hlp		{font:bold 18px arial;color:blue;}
 		#dbgcomm{font:12px 'Courier New';margin-top:4px;}
 		#dbgtxt	{font:12px 'Courier New';background-color:transparent; resize:none;display:none;}
@@ -38,6 +40,7 @@
     #chart	{border:thin solid lime;background-color:black;margin-top:4px;}
 		#usrbtn	{font:bold 16px arial;color:green}
 		#srvcbtn{font:bold 16px arial;color:red}
+		#msg		{font:bold 14px monospace;color:black;position: relative;left:-68px;}
 
   </style>
 </head>
@@ -66,10 +69,13 @@
   </table>
 	<div id="usr">
 		<canvas id="chart" height="200" width="770" onclick="ChartClick()"></canvas><br/>
-		<select id="weeks"  name="weeks"  onclick="LogTyp=1; Cyc=20;"><option value="0">Now</option></select>
-		<select id="months" name="months" onclick="LogTyp=2; Cyc=20;"></select>
-		<select id="years"  name="years"  onclick="LogTyp=2; Cyc=20;"></select>
+		<select id="logtype" class="navbtn" onchange="NavigateLog(0);">
+		 	<option value="0">Day</option><option value="1">Week</option><option value="2">Month</option><option value="2">Year</option></select>
+		<input type = "button" id="bkbtn" class="navbtn" value="<<" onclick="NavigateLog(-1);">  </input> 
+		<input type = "button" id="fwbtn" class="navbtn" value=">>" onclick="NavigateLog(1);">  </input>
+		<textarea	id="msg" cols="77" rows="4" readonly></textarea>
 	</div>
+
 	<div id="srvc">
 		<input type="text" id="cmd" maxlength="31" onkeydown="CmdKdn(event)"/><br />
     <select id="hlog"  class="hist" size="6" onclick="HClick(this.selectedIndex)" onchange="HChg(this.selectedIndex)"></select>
@@ -97,10 +103,10 @@ Error codes      0:TimeoutRx -1:OddAddr -2:Nack -3:ChksmErr -4:Undefined
 		<textarea	id="dbgtxt" cols="45" rows="2" readonly></textarea>
 	</div>
 	<div>
-		<output	id="msg"></output><br> 
 		<output	id="dbgcomm"></output>
 		<button id="srvcbtn" class="accbtn" onclick="location.href='login?1&index.html'">Activate Tool</button>
-		<button id="usrbtn"  class="accbtn" onclick="location.href='logout?index.html'">Exit Tool</button>
+		<button id="usrbtn"  class="accbtn" onclick="location.href='logout?index.html'">Exit Tool</button><br/>
+		<output	id="txt"></output>
 	</div>
 
 
