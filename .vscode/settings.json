@@ -1,9 +1,0 @@
-{
-  "files.exclude": {
-    ".history": true
-  },
-  "C_Cpp.errorSquiggles": "enabled",
-  "arduino.disableIntelliSenseAutoGen": false,
-  "C_Cpp.default.intelliSenseMode": "windows-gcc-arm",
-  "C_Cpp.default.customConfigurationVariables": {}
-}
