@@ -4,6 +4,23 @@
 // ------ NOTE: DO NOT USE delay() function on Webserver and Ticker because cause exception ----
 //        Use: the millis(); 
 //        E.g.  (unsigned t = millis(); while((millis() - t) < delay);)
+// NOTE:
+//    Externally declared:
+//    TVar  Vars[];									// Must be into Main program
+//    byte  VarsCnt;				  			// global vars count array
+//
+//    Local in library but public
+//    byte  Verbose;                // Diag. Serial verbosity level (defined into ws.ini)
+//                  bit 0 = devices / files errors
+//                  bit 1 = setup info
+//                  bit 3 = execution functions (file open,device init)
+//                  bit 4 = execution functions (runtime #1)
+//                  bit 5 = execution functions (runtime #2)
+//                  bit 6 =
+//                  bit 7 =
+//    byte  Auth;                    // Authorization level (0..3)
+//                  (defined into ws.ini)
+
 
 
 
@@ -12,6 +29,7 @@
 
 #ifndef _WebSrv_H  
 	#define _WebSrv_H
+ 
  
 #define dword uint32_t
  
@@ -27,12 +45,12 @@
     #include <ESPAsyncTCP.h>
    #endif
 #include <ESPAsyncWebSrv.h>
+#include <ESP8266LLMNR.h>
+#include <IniFile.h>
+
 
 #define LED(st)         digitalWrite(LED_BUILTIN,!st);
 #define CHKACCESS       0x71
- 
-
- 
 
 // Public table wich define the visibility of vars via ReadVar()/WriteVar..
 enum eType
@@ -45,17 +63,17 @@ enum eType
 typedef struct 
               {
                 byte      Code;
-                char      Txt[33];                        // text buffer
-              } TCmd;                                     // Command from client
+                char      Txt[33];          // text buffer
+              } TCmd;                       // Command from client
      
 typedef struct 
               { 
-                char      Name[16];												// The name used to identify the var side html
-                char      Fmt[8];													// The output formatted to string
-                void*     Obj;			 											// The pointer to ESP program ram (var,array,structure)
-                eType     Type;												    // Enum of type
-                word      Attr;														// Bits 0..2(int,?,?,float,String..) Bit 6,7 = Rd/Wr Author.
-                word      Len;	  												// The lenght of var (1,2,4) for numeric,n for string
+                char      Name[16];					// The name used to identify the var side html
+                char      Fmt[8];						// The output formatted to string
+                void*     Obj;			 				// The pointer to ESP program ram (var,array,structure)
+                eType     Type;							// Enum of type
+                word      Attr;							// Bits 0..2(int,?,?,float,String..) Bit 6,7 = Rd/Wr Author.
+                word      Len;	  					// The lenght of var (1,2,4) for numeric,n for string
               } TVar;  
  
 typedef struct { 
@@ -65,10 +83,8 @@ typedef struct {
 
 extern const TVar  Vars[];									// Must be into Main program (define visibility of server)
 extern const byte  VarsCnt;									// Same as before (global vars count)
-extern       byte *Kw;                      // pointer of Set.Kv
-extern       byte  Verbose;                 // helper
-extern       byte  Auth;
-extern "C"   byte GetConfigValue(const char *key, byte maxnum, char *values[]);
+extern       byte  Verbose;                 // Diag. Serial verbosity (bits)
+extern       byte  Auth;                    // Authorization level (0..3)
   
    
 class TWebSrv 
@@ -86,7 +102,7 @@ class TWebSrv
                 TWebSrv				  (void);
 				 bool   Begin           (bool(*cmdcallback)(byte code,char *txt));
   const  char   Build[16]       = "V1.01";
-  const  char   HostName[16]    = "mywebsrv";
+  char          HostName[16]    = "mywebsrv";
   IPAddress     ApIP,StaIP;
 };
  

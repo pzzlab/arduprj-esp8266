@@ -77,8 +77,7 @@ void loop(void)
 // ------------------------------------------------
 {
  ;
- word n = 0;
- if (len > 128) len = 128;
+ byte n = 0;
  WtRdy();
  Wire.beginTransmission(devaddr);
  Wire.write(addr >> 8);           
@@ -97,14 +96,12 @@ void loop(void)
 // return: true = OK false = FAIL
 // ------------------------------------------------
 {
- ;
- if (len > 128) len = 128;
  byte n;
  WtRdy();
  Wire.beginTransmission(devaddr);
  Wire.write(addr >> 8);           
  Wire.write(addr & 0xff);           
- Wire.write((char*)buf,(uint8_t)len);
+ Wire.write((char*)buf,len);
  Wire.endTransmission();
  lwr = micros();
  // verify if data read is equal  written

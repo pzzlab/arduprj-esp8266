@@ -19,6 +19,9 @@ void loop(void)
  if (!Eeprom.Write(a,b)).. // error
  
 }
+******** IMPORTANT ********
+Cannot be used for (write/erase) into ticker else generate panic exception.
+Handle in loop() with a global command
 */
 
 class T24LCxxx

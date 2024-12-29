@@ -37,22 +37,23 @@ char TMcp39F511::RdReg(byte addr,byte bytes, void *rx)
  char buf[36];
 
  if (addr & 0x1) {Data->Nack++;        return(-1);}          // odd address
- if (bytes > 32) bytes = 32;                                  // limit to 32 bytes
- n = bytes + 3;                                               // expected response
- memset(buf,0,sizeof(buf));                                   // clean buffer
- if (n > 35) n = 35;                                          // limit rxbuf overflow
- tx[4] = addr; tx[6] = bytes;                                 // set starting and length
- for (chk = i = 0; i < 8; i++) chk += tx[i]; tx[7] = chk;     // checksum
- Serial.write(tx,8);                                          // write on device
- n = Serial.readBytes(buf, n + 1);                            // query response
+ if (bytes > 32) bytes = 32;                                 // limit to 32 bytes
+ n = bytes + 3;                                              // expected response
+ memset(buf,0,sizeof(buf));                                  // clean buffer
+ if (n > 35) n = 35;                                         // limit rxbuf overflow
+ tx[4] = addr; tx[6] = bytes;                                // set starting and length
+ for (chk = i = 0; i < 8; i++) chk += tx[i]; 
+ tx[7] = chk;                                                // checksum
+ Serial.write(tx,8);                                         // write on device
+ n = Serial.readBytes(buf, n + 1);                           // query response
  // valid response 
- if ((n >= 3) && (buf[0] == '\x06'))                          // ack, bytes match
+ if ((n >= 3) && (buf[0] == '\x06'))                         // ack, bytes match
     {
       for (n--, chk = i = 0; i < n; i++)  chk += buf[i];
       // calc new checksum
       if (chk == buf[n]) 
-         {memcpy(rx, &buf[2],n - 2);    return(1);}           // validate OK
-      Data->ChkErr++;                   return(-3);           // Invalid checksum
+         {memcpy(rx, &buf[2],n - 2);    return(1);}          // validate OK
+      Data->ChkErr++;                   return(-3);          // Invalid checksum
     }
 else  
   {
@@ -110,7 +111,7 @@ bool    TMcp39F511::WrCmd(byte cmd)
 //         false = error or not response
 // -------------------------------------
 {
- byte i, n = 1;
+ byte n = 1;
  char rx[8],tx[8];
 
  switch (cmd)
@@ -170,7 +171,7 @@ bool TMcp39F511::SetOfs(char wich, byte ch, int val, char* txt)
 // return: true = ok false = error (on txt reason)
 // ------------------------------------------------
 {
-  byte addr,l,r;
+  byte addr = 0, l, r;
   // check for a valid channel
   if ((ch > 1) &&(Data->Device != 'N')) {strcpy(txt,"Invalid Channel");   return(false);}
   switch (wich)
@@ -191,7 +192,7 @@ bool TMcp39F511::SetRange(char wich, byte ch, char op, char* txt)
 // return: true = ok false = error (on txt reason)
 // ------------------------------------------------
 {
-  byte addr,v,r;
+  byte addr = 0, v, r;
   // check for a valid channel
   if ((ch > 1) &&(Data->Device != 'N')) {strcpy(txt,"Invalid Channel");       return(false);}
   if ((op != '>') && (op !='<'))        {strcpy(txt,"only < or >");           return(false);}
@@ -442,8 +443,7 @@ store        -> store the data on flash
 {
   int val; float fval;
   byte a,ch,l,r;
-  char s[32];
- 
+  
  if (!strcmp((const char*)line,"store"))        // store on flash
     {
      if (!WrCmd(CMD_SAVE_FLASH))    {strcpy(line,"Store Failed");         return(false);}
