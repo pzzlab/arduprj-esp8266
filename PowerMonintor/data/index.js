@@ -28,19 +28,19 @@ function Cyclic()										//	---- CYCLIC LOOP ----
 
 		case 10:	// Read the  Data block 
 						NxtCyc = 10;	
-						Xhr(200,'Read?Data',true,DecodeData,false);
+						Xhr(250,'Read?Data',true,DecodeData,false);
 						Cyc = 0; 
 						break;
 
 		case 20:	// Read the  Data block then UpdChart
 						NxtCyc = 10;	
-						Xhr(200,'Read?Data',true,DecodeData,true);
+						Xhr(250,'Read?Data',true,DecodeData,true);
 						Cyc = 0; 
 						break;
 
 		case 30:	// Write Command #2 (LogType + LogIdx) codified as word
 						NxtCyc = 20;
-						Xhr(200,'Write?TableIdx',false,WriteDone,'',(LogTyp << 8) + LogIdx); 
+						Xhr(250,'Write?TableIdx',false,WriteDone,'',(LogTyp << 8) + LogIdx); 
 						Cyc = 0; 
 						break;
 
@@ -52,7 +52,7 @@ function Cyclic()										//	---- CYCLIC LOOP ----
 
 						
 		case 40:// writing Manual Data, wait until done (nxt cyc is the previous)
-						Xhr200,('Write?Man',false,WriteDone,'',TMan); dly = 500;
+						Xhr(250,'Write?Man',false,WriteDone,'',TMan); dly = 500;
 						Cyc	 = 0;
 						break;
 	}
@@ -70,7 +70,7 @@ function DecodeData(http,showgraph)	// ---- DECODE AND DISPLAY DATA BLOCK ----
 	day			= a.slice(ofs, ofs + 1);	ofs ++;
 	hour		= a.slice(ofs, ofs + 1);	ofs ++;
 	min 		= a.slice(ofs, ofs + 1);	ofs ++;
-	sec			= a.slice(ofs, ofs + 1);	ofs ++; ClkMin = sec;
+	sec			= a.slice(ofs, ofs + 1);	ofs ++; ClkMin = sec / 2;
 	a	= new Uint16Array(http.response);ofs /=2;	
 	yday		= a.slice(ofs, ofs + 1);	ofs ++;
 	// Temp,Hum,Flags,_
@@ -107,12 +107,12 @@ function DecodeData(http,showgraph)	// ---- DECODE AND DISPLAY DATA BLOCK ----
 	device	= a.slice(ofs, ofs + 1);	ofs ++; 
 	valid		= a.slice(ofs, ofs + 1);	ofs ++;
 	a = new Int16Array(http.response); ofs /= 2;
-	
 	deb 		= a.slice(ofs, ofs + 17);	ofs +=17;		// debug buffer
 //	a = new Uint16Array(http.response);ofs /=2;		// Time[2]
 	tm[0]		= a.slice(ofs, ofs + 1);	ofs ++; 
 	tm[1]		= a.slice(ofs, ofs + 1);	ofs ++;
-	__			= a.slice(ofs, ofs + 8);	ofs +=8;
+	rssi 		= a.slice(ofs, ofs + 1);	ofs ++;
+	__			= a.slice(ofs, ofs + 7);	ofs +=7;
 	a = new Int16Array(http.response);
 	Wh	    = a.slice(ofs, ofs + 192);						// log records [96[2]]
 	
@@ -187,7 +187,8 @@ function DecodeData(http,showgraph)	// ---- DECODE AND DISPLAY DATA BLOCK ----
 		}
 
 		// Counters
-	document.getElementById('dbgcomm').value = 'Comm(Err) ' + XhrReq  + '(' + Errors + '); Req(Lost,Chk,Nack) ' + comms + '(' + lost + ',' + chk + ',' + nack +')';
+	document.getElementById('dbgcomm').value = 'Comm(Err) ' + XhrReq  + '(' + Errors + '); Req(Lost,Chk,Nack) ' 
+																					+ comms + '(' + lost + ',' + chk + ',' + nack +') RSSI '+ rssi;
   Cyc	= NxtCyc;
 } 
 // 	---- LOG AND GRAPH ----
@@ -360,7 +361,7 @@ function Xhr(tmt,cmd,binary,callback,param,value)
 	if ((http = new XMLHttpRequest()) != null)
 	{
 		XhrReq++; if (value != undefined) cmd += '=' + value;
-		http.timeout = tmt; http.responseType = '';
+		http.timeout = tmt * 4; http.responseType = '';
 		http.open("GET", cmd, true); if (binary) http.responseType = 'arraybuffer';
 		http.onloadend = function ()	
 			{if (!http.status) return;  Cyc = NxtCyc; Errors = 0; if (callback && (http.status == 200))	callback(http,param);}

@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Esp8266",
+            "includePath": [
+                "../libraries/**",
+                "C:/ArduPrj/libraries/**",
+                "C:/Users/io/AppData/Local/Arduino15/packages/esp8266/hardware/esp8266/3.1.2/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "intelliSenseMode": "windows-clang-arm"
+        }
+    ],
+    "version": 4
+}
