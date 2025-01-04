@@ -5,4 +5,5 @@ ArduinoSYS/
 *.gz
 *.zip
 *.rar
+*.jar
 .history
