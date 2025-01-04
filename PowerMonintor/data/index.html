@@ -6,49 +6,45 @@
 	<link rel="icon" href="data:,">
   <title>PwrMon V1.0 By P.F.</title> 
   <style type="text/css">
-	  body		{font:bold 20px arial;} 
-		table		{background-color:antiquewhite;border:2px solid black; width:770px;}
-		th			{text-align:center;}
-		td			{border:thin solid black;text-align:right;padding-right:2px;background-color:aquamarine;height:30px;}
-		select	{font-size:20px; margin-top:4px;}
-		th			{font-size:16px;}
-		.rstbtn {border:none;background-color:antiquewhite;position:relative;top:-3px;}
-		.btna		{font-size:20px;margin:0px 5px;}
-		.pf			{color:brown; width:45px;}
-		.a			{color:fuchsia;width:75px;}
-		.w			{color:blue;width:100px;}
-		.wm 		{color:darkorange;width:100px;}
-		.t			{color:green;width:70px;}
-		.e			{color:deeppink; width:110px}
-		.hist		{font: bold 12px 'Courier New';color:darkmagenta;}
-		.htxt		{display: none;}
-		.navbtn {font:bold 24px arial;color:blueviolet;position:relative;top: -4px;}
-		#bkbtn  {top:-48px; left: -108px;}
-		#fwbtn  {top:-48px; left: -92px;}
-		#srvc		{display: none;}
-		#usrx		{display: none;}
-		#years	{width:70px;}
-		#cmd		{width:590px;color:maroon;font:bold 14px 'Courier New'; margin-top:4px;}
-		#hlp		{font:bold 18px arial;color:blue;}
-		#dbgcomm{font:12px 'Courier New';margin-top:4px;}
-		#dbgtxt	{font:12px 'Courier New';background-color:transparent; resize:none;display:none;}
-		#hlog		{margin-top:4px; width:250px}
-		#hresp	{color:blue; margin-top:4px; width:340px}
-		#dvhz		{color:black;width:200px;}
-		#now		{font-size:16px;color:maroon;position:relative;left:200px;}
-	  #comms	{font-family:'Courier New'; font-size:12px;}
-    #chart	{border:thin solid lime;background-color:black;margin-top:4px;}
-		#usrbtn	{font:bold 16px arial;color:green}
-		#srvcbtn{font:bold 16px arial;color:red}
-		#msg		{font:bold 14px monospace;color:black;position: relative;left:-68px;}
+	body		{font:bold 20px arial;} 
+	table		{background-color:antiquewhite;border:2px solid black; width:770px;}
+	th			{text-align:center;}
+	td			{border:thin solid black;text-align:right;padding-right:2px;background-color:aquamarine;height:30px;}
+/*	select		{font-size:20px; margin-top:4px;}*/
+	th			{font-size:16px;}
+	.rstbtn 	{border:none;background-color:antiquewhite;position:relative;top:-3px;}
+	.pf			{color:brown; width:45px;}
+	.a			{color:fuchsia;width:75px;}
+	.w			{color:blue;width:100px;}
+	.wm 		{color:darkorange;width:100px;}
+	.t			{color:green;width:70px;}
+	.e			{color:deeppink; width:110px}
+	.hist		{font: bold 12px 'Courier New';color:darkmagenta;}
+	.htxt		{display: none;}
+	.navbtn		{font:bold 28px arial;color:blueviolet;margin: 4px 10px 8px 0px;padding: 4px; width:80px;}
+	#nav1,#nav2	{width:90px;color:blue;}
+	#srvc		{display: none;}
+	#cmd		{width:590px;color:maroon;font:bold 14px 'Courier New'; margin-top:4px;}
+	#hlp		{font:bold 18px arial;color:blue;}
+	#dbgcomm	{font:12px 'Courier New';margin-top:4px;}
+	#dbgtxt		{font:12px 'Courier New';background-color:transparent; resize:none;display:none;}
+	#hlog		{margin-top:4px; width:250px}
+	#hresp		{color:blue; margin-top:4px; width:340px}
+	#dvhz		{color:blue; margin-left: 100px;}
+	#temphum	{color:maroon;margin-left: 30px;}
+	#now		{color:black; margin-left:4px;}
+    #chart		{border:thin solid lime;background-color:black;margin-top:4px;}
+	#usrbtn		{font:bold 16px arial;color:green}
+	#srvcbtn	{font:bold 16px arial;color:red}
+	#msg		{font:bold 14px monospace;color:black;position: relative;width: 765px;}
 
   </style>
 </head>
 <body onload="EntryPage();">
-<table id="tab">
-	<output id="now"> Today: </output>
-	<caption> Mcp39F511<output id="dvhz"></output></caption>
-    <tbody>
+	<table id="tab">
+	
+		<output id="now"> Today: </output> <output id="temphum"> TempHum: </output> <output id="dvhz">Device?</output>
+		<tbody>
 			<tr> 
 				<th>Cos&#934</th><th>A</th><th>W</th>
 				<th>Wmax In</th><th>Wmax Out</th><th>Hours</th><th>Wh In</th><th>Wh Out</th>
@@ -65,51 +61,54 @@
 				<td class="t"  id="t1"></td><td class="e" id="p1"></td><td class="e" id="q1"></td>
 				<td class="rstbtn" id="btn1"><input type="button" value ="Reset" onclick="SendCmd(2)"></td>
 			</tr>
-    </tbody>
-  </table>
-	<div id="usr">
-		<canvas id="chart" height="200" width="770" onclick="ChartClick()"></canvas><br/>
-		<select id="logtype" class="navbtn" onchange="NavigateLog(0);">
-		 	<option value="0">Day</option><option value="1">Week</option><option value="2">Month</option><option value="2">Year</option></select>
-		<input type = "button" id="bkbtn" class="navbtn" value="<<" onclick="NavigateLog(-1);">  </input> 
-		<input type = "button" id="fwbtn" class="navbtn" value=">>" onclick="NavigateLog(1);">  </input>
-		<textarea	id="msg" cols="77" rows="4" readonly></textarea>
-	</div>
-
-	<div id="srvc">
-		<input type="text" id="cmd" maxlength="31" onkeydown="CmdKdn(event)"/><br />
-    <select id="hlog"  class="hist" size="6" onclick="HClick(this.selectedIndex)" onchange="HChg(this.selectedIndex)"></select>
-    <select id="hresp" class="hist" size="6" ></select>
-		<form>
-			<input type="checkbox" id="hlp" name="hlp" onclick="Help('h')"/> <label for="hlp">Help Cmd</label>
-			<input type="checkbox" id="regs"name="regs"onclick="Help('r')"/> <label for="regs">Help Regs</label>
-			<input type="checkbox" id="dbg" name="dbg" /> <label for="dbg">Dbg</label>
-		</form>
-		<textarea id="hlptxt" class="htxt" rows="12" cols="81" readonly>
-aa=nn [aa.2=n]   -> assign at address aa(hex) the value nn [aa.2 = 32 bit]
-aa?   [aa.2?]    -> read content (16 [aa.2] 32bit) from address aa (hex)
-ofs[apq][ch]=nn  -> set the offsets at NO LOAD a,p,q       for channel ch
-cal[fv]=nn       -> start calibration value for f,v        (nn: value)
-cal[apq][ch]=nn  -> start calibration value for a,p,q,pf   for channel ch
-rngv[<>]         -> '<' or '>' mul / div value by 2 of v   for channel ch
-rng[ap][ch][<>]  -> '<' or '>' mul / div value by 2 of a,p for channel ch
-zerop[ch]        -> reset energy counters of ch to zero
-erase            -> bulk erase eeprom
-store            -> store the data on flash
-NOTE: [f,v,a,p,q]:only one, [ch]:1 or 2, (e.g. cala1=1.000  calv=227.5 rnga1< )
-Error codes      0:TimeoutRx -1:OddAddr -2:Nack -3:ChksmErr -4:Undefined 
-		</textarea>
-		<textarea id="regstxt" class="htxt" rows="10" cols="47" readonly></textarea>
-		<textarea	id="dbgtxt" cols="45" rows="2" readonly></textarea>
-	</div>
-	<div>
-		<output	id="dbgcomm"></output>
-		<button id="srvcbtn" class="accbtn" onclick="location.href='login?1&index.html'">Activate Tool</button>
-		<button id="usrbtn"  class="accbtn" onclick="location.href='logout?index.html'">Exit Tool</button><br/>
-		<output	id="txt"></output>
-	</div>
-
-
+		</tbody>
+	</table>
+		<div id="usr">
+			<canvas id="chart" height="200" width="770" onclick="ChartClick()"></canvas><br/>
+			<textarea	id="msg" cols="81" rows="4" readonly></textarea><br/>
+		</div>
+		<div id ="navbtns">
+			<input type= "button" id="nav1" class="navbtn" value="Today" onclick="NavigateLog(0);" title="Select Today"> </input> 
+			<input type= "button" class="navbtn" value="<<<" onclick="NavigateLog(-31);" title="- 31 days"> </input> 
+			<input type= "button" class="navbtn" value="<<" onclick="NavigateLog(-7);" title="- 7 days"> </input> 
+			<input type= "button" class="navbtn" value="<" onclick="NavigateLog(-1);" title="- 1 day"> </input> 
+			<input type= "button" id="nav2" class="navbtn" value="31/12" onclick="" title="Selected Date"> </input> 
+			<input type= "button" class="navbtn" value=">" onclick="NavigateLog(1);" title="+ 1 day"> </input>
+			<input type= "button" class="navbtn" value=">>" onclick="NavigateLog(7);" title="+ 7 day"> </input>
+			<input type= "button" class="navbtn" value=">>>" onclick="NavigateLog(31);" title="+ 31 day"> </input>
+		</div>
+		<div id="srvc">
+			<input type="text" id="cmd" maxlength="31" onkeydown="CmdKdn(event)"/><br />
+		<select id="hlog"  class="hist" size="6" onclick="HClick(this.selectedIndex)" onchange="HChg(this.selectedIndex)"></select>
+		<select id="hresp" class="hist" size="6" ></select>
+			<form>
+				<input type="checkbox" id="hlp" name="hlp" onclick="Help('h')"/> <label for="hlp">Help Cmd</label>
+				<input type="checkbox" id="regs"name="regs"onclick="Help('r')"/> <label for="regs">Help Regs</label>
+				<input type="checkbox" id="dbg" name="dbg" /> <label for="dbg">Dbg</label>
+			</form>
+			<textarea id="hlptxt" class="htxt" rows="12" cols="81" readonly>
+	aa=nn [aa.2=n]   -> assign at address aa(hex) the value nn [aa.2 = 32 bit]
+	aa?   [aa.2?]    -> read content (16 [aa.2] 32bit) from address aa (hex)
+	ofs[apq][ch]=nn  -> set the offsets at NO LOAD a,p,q       for channel ch
+	cal[fv]=nn       -> start calibration value for f,v        (nn: value)
+	cal[apq][ch]=nn  -> start calibration value for a,p,q,pf   for channel ch
+	rngv[<>]         -> '<' or '>' mul / div value by 2 of v   for channel ch
+	rng[ap][ch][<>]  -> '<' or '>' mul / div value by 2 of a,p for channel ch
+	zerop[ch]        -> reset energy counters of ch to zero
+	erase            -> bulk erase eeprom
+	store            -> store the data on flash
+	NOTE: [f,v,a,p,q]:only one, [ch]:1 or 2, (e.g. cala1=1.000  calv=227.5 rnga1< )
+	Error codes      0:TimeoutRx -1:OddAddr -2:Nack -3:ChksmErr -4:Undefined 
+			</textarea>
+			<textarea id="regstxt" class="htxt" rows="10" cols="47" readonly></textarea>
+			<textarea	id="dbgtxt" cols="45" rows="2" readonly></textarea>
+		</div>
+		<div>
+			<output	id="dbgcomm"></output>
+			<button id="srvcbtn" class="accbtn" onclick="location.href='login?1&index.html'" title="Acess to Service">Service Tool</button>
+			<button id="usrbtn"  class="accbtn" onclick="location.href='logout?index.html'" title="Return to UserMode">Normal Mode</button><br/>
+			<output	id="txt"></output>
+		</div>
 	<script type="text/javascript" src="index.js"></script>
-</body>
+	</body>
 </html>
