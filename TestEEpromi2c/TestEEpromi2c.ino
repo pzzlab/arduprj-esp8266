@@ -15,7 +15,7 @@ T24LCxxx        Eep;
 Ticker          Tick;                         // Ticker handler
 
 byte rq;
-
+byte Verbose = 1;
 
 void Cyclic(void)
 {
@@ -58,7 +58,7 @@ void setup(void)
   if (!Eep.Begin(512,true)) Serial.println("\nEEprom Init Failed");
 
   Serial.println("\n---- EEprom I2C test program ----");
-  Serial.println("r aa nn                -> read from address aa(hex) for nn bytes");
+  Serial.println("r aa                   -> read from address aa(hex) for 128 bytes");
   Serial.println("w8[16,32] aa xxxx      -> write 8,16 32 bit value (hex) on address aa(hex)");
   Serial.println("fmt                    -> erase the entire eeprom");
   Serial.println("pf nn                  -> page erase nn (dec)");
@@ -73,45 +73,44 @@ void loop(void)
  word        a,rd,_w;
  dword       n,_d;
  unsigned    t1;
- byte        ebuf[128],_b;
-
+ byte        ebuf[128],_b,wbuf[130];
+ 
  delay(100);
 
  if ((Serial.available() >= 1) && Serial.readBytes(buf, sizeof(buf)))
    {
     t1 = millis();
-    n = 0;
-    if (sscanf(buf,"r %hx %d",&a,&n) == 2)
+    n = 128;
+    a = 0;
+    if (sscanf(buf,"r %hx",&a) == 1)
         {
-         if (n > sizeof(ebuf)) {n = sizeof(ebuf); Serial.printf("N Adjusted to %u\n", sizeof(ebuf));}
-         rq = 10;
-/*         rd = Eep.Rd(a,n, ebuf);
+         rd = Eep.Rd(a,n, ebuf);
          Serial.printf("%04hX ",a); 
          for (n = 0; n < rd; n++) 
               { 
                 if (n && !(n & 0xf)) Serial.printf("\n%04hX ",a + n);    // every 16, new line
                 Serial.printf("%02hhX ",ebuf[n]);         // show byte
               }  
-  */
         }
 
     if (sscanf(buf,"w8 %hx %x",&a,&n) == 2)   
-        {_b = n; if (!Eep.Wr(a,_b,true)) Serial.println("Vfy Error");}
-    if (sscanf(buf,"pf %d",&n) == 1) rq = 1;
-
-
-/*    if (sscanf(buf,"w8 %hx %x",&a,&n) == 2)   
-        {_b = n; if (!Eep.Wr(a,_b,true)) Serial.println("Vfy Error");}
+        {_b = n; if (!Eep.Wr(a,_b)) Serial.println("Vfy Error");}
     if (sscanf(buf,"w16 %hx %x",&a,&n) == 2)   
-        {_w = n; if (!Eep.Wr(a,_w,true)) Serial.println("Vfy Error");}
+        {_w = n; if (!Eep.Wr(a,_w)) Serial.println("Vfy Error");}
     if (sscanf(buf,"w32 %hx %x",&a,&n) == 2)   
-        {_d = n; if (!Eep.Wr(a,_d,true)) Serial.println("Vfy Error");}
+        {_d = n; if (!Eep.Wr(a,_d)) Serial.println("Vfy Error");}
+    if (sscanf(buf,"w128 %hx %hx",&a,&n) == 2)   
+        {memset(wbuf,n,130); if (!Eep.Wr(a,128,wbuf)) Serial.println("Vfy Error");}
     if (!strncmp(buf,"fmt",3))   
         if (!Eep.Erase()) Serial.println("Fmt Error");
-    if (sscanf(buf,"pf %d",&n) == 1)   
-        if (!Eep.PgErase(n)) Serial.println("Pgfmt Error");
+    if (sscanf(buf,"pf %d %hx",&n,&a) == 2)   
+        if (!Eep.PgFill(n,a)) Serial.println("Pgfill Error");
+    if (sscanf(buf,"pe %d",&n) == 1)   
+        if (!Eep.PgErase(n)) Serial.println("PgErase Error");
+    if (!strncmp(buf,"bld",3))   
+        {for (n = 0; n <128;n++) ebuf[n] = n; if (!Eep.Wr(0,128,ebuf)) Serial.println("wr Error");}
     Serial.printf("\nTime: %u ms\n >>\n",millis() - t1);
-    */
+    
    }
   
   
