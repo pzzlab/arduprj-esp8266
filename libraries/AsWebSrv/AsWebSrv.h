@@ -29,7 +29,7 @@
 
 #ifndef _WebSrv_H  
 	#define _WebSrv_H
- 
+
  
 #define dword uint32_t
  
@@ -47,10 +47,11 @@
 #include <ESPAsyncWebSrv.h>
 #include <ESP8266LLMNR.h>
 #include <IniFile.h>
+#include <Arduino.h>
+
 
 
 #define LED(st)         digitalWrite(LED_BUILTIN,!st);
-#define CHKACCESS       0x71
 
 // Public table wich define the visibility of vars via ReadVar()/WriteVar..
 enum eType
@@ -98,7 +99,7 @@ class TWebSrv
   static void 	Login           (AsyncWebServerRequest *request);
   static void 	Logout          (AsyncWebServerRequest *request);
  
- public:
+  public:
                 TWebSrv				  (void);
 				 bool   Begin           (bool(*cmdcallback)(byte code,char *txt));
   const  char   Build[16]       = "V1.01";

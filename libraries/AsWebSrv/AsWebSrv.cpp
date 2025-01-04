@@ -82,7 +82,7 @@ bool TWebSrv::Begin(bool(*callback)(byte code, char *text))
    // read from ws.ini Verbose and host name
    IniFile * ini = new IniFile("ws.ini");
    Verbose = ini->ReadInteger("misc","verbose",127);       // Verbose level (default = 127) and display
-  if (Verbose) Serial.printf("Verbose: 0x%02hhx\n",Verbose);
+  if (Verbose) Serial.printf("\nVerbose: 0x%02hhx\n",Verbose);
   // Get HostName
   strlcpy(HostName,ini->ReadString("misc","hostname","pwrmon"),sizeof(HostName)); 
   if (Verbose & 2) Serial.printf("HostName: %s\n",HostName);

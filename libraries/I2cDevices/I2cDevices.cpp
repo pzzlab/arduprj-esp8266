@@ -1,6 +1,7 @@
 #include <I2cDevices.h>
-
+extern byte Verbose;
 unsigned us;
+
 // Ticker compatible delay() BLOCKING FUNCTION to use instead delay into ticker (else panic exc.)
  void Delay(word ms) {long t1 = millis(); while((millis() - t1) <= ms) yield();}
 
@@ -26,13 +27,21 @@ void loop(void)
 
 // ---------------------------------------------------------------------------------------
 
+void T24LCxxx::SetVerify(bool state)
+// ------------------------------------------------
+// propagate the verify stare to write functions
+// ------------------------------------------------
+{verify = state;}
+// ---------------------------------------------------------------------------------------
+
  void T24LCxxx::WtRdy(void)
 // ------------------------------------------------
 // check for eeprom RDY (no writing in progress)
 // (testing for ACK from i2c device)
 // ------------------------------------------------
 {
- while ((micros() - lwr) <= 6000)                   // Timeout is 6ms
+ dword t1 = micros();
+ while ((micros() - t1) <= 5000)                   // Timeout is 5ms
        {
         Wire.beginTransmission(devaddr);     
         if (!Wire.endTransmission()) return;        // ACK received, exit before timeout
@@ -57,8 +66,8 @@ void loop(void)
      default:  return(false);
     }
   devaddr = addr; 
-  lwr     = micros();
   exist   = false;
+  verify  = true;
   digitalWrite(LED_BUILTIN,false);        // force out level (else if true i2c do not function)
   Wire.begin(sda_pin,scl_pin);            // initialize pins
   if (fast) Wire.setClock(400000); 
@@ -90,7 +99,7 @@ void loop(void)
 }
 // ---------------------------------------------------------------------------------------
  
- bool  T24LCxxx::Wr (word addr, byte len, void* buf, bool verify)
+ bool  T24LCxxx::Wr (word addr, byte len, void* buf)
 // ------------------------------------------------
 // Write to addr for len bytes getting from buf[]
 // return: true = OK false = FAIL
@@ -103,11 +112,10 @@ void loop(void)
  Wire.write(addr & 0xff);           
  Wire.write((char*)buf,len);
  Wire.endTransmission();
- lwr = micros();
- // verify if data read is equal  written
+ WtRdy();
+  // verify if data read is equal  written
  if (verify)
     {
-     WtRdy();
      Wire.beginTransmission(devaddr);
      Wire.write(addr >> 8);           
      Wire.write(addr & 0xff);           
@@ -115,13 +123,16 @@ void loop(void)
      Wire.requestFrom(devaddr, len);
      byte *p = (byte*)buf;
      for (n = 0; n < len; n++)
-       if (Wire.available()) if (Wire.read() != p[n]) return(false);
+       if (Wire.available()) 
+        // chk if ok(else print error and return false)
+        if (Wire.read() != p[n]) 
+          {if (Verbose & 1)Serial.printf("\nEEVfy Err (%hx)\n",addr + n); return(false);}
     }   
  return (true);
 }
 // ---------------------------------------------------------------------------------------
 
- bool  T24LCxxx::Wr (word addr, byte val, bool verify)
+ bool  T24LCxxx::Wr (word addr, byte val)
 // ------------------------------------------------
 // Overloaded of wr: Wite a 16 bit data
 // return: true = OK false = FAIL
@@ -129,29 +140,29 @@ void loop(void)
 
 {
   byte buf[8]; buf[0] = val;
-  return(Wr(addr,1,(void*)buf,verify));
+  return(Wr(addr,1,(void*)buf));
 }
 // ---------------------------------------------------------------------------------------
 
- bool  T24LCxxx::Wr (word addr, word val, bool verify)
+ bool  T24LCxxx::Wr (word addr, word val)
 // ------------------------------------------------
 // Overloaded of wr: Wite a 16 bit data
 // return: true = OK false = FAIL
 // ------------------------------------------------
 {
   byte buf[8]; *(word*) buf = val;
-  return(Wr(addr,2,(void*)buf,verify));
+  return(Wr(addr,2,(void*)buf));
 }
 // ---------------------------------------------------------------------------------------
 
-bool  T24LCxxx::Wr (word addr, dword val, bool verify)
+bool  T24LCxxx::Wr (word addr, dword val)
 // ------------------------------------------------
 // Overloaded of wr: Wite a 32 bit data
 // return: true = OK false = FAIL
 // ------------------------------------------------
 {
   byte buf[8]; *(dword*) buf = val;
-  return(Wr(addr,4,(void*)buf,verify));
+  return(Wr(addr,4,(void*)buf));
 }
 
 // ---------------------------------------------------------------------------------------
@@ -162,10 +173,49 @@ bool  T24LCxxx::Wr (word addr, dword val, bool verify)
 // return: true = ok; false = error (12ms)
 // ------------------------------------------------
 {
- byte  buf[128];
  if (page >= pgs) page = pgs - 1;
- memset(buf,0xff, sizeof(buf));
- return(Wr (page * pgsz, pgsz, buf, true));
+ return(PgFill(page,0xff));
+}
+// ---------------------------------------------------------------------------------------
+
+bool  T24LCxxx::PgFill (word page, byte data)
+// ------------------------------------------------
+// this is a workaround to write the entire page
+// due a strange problem (not write last 2 page bytes)
+// return: true = ok; false = error (12ms)
+// ------------------------------------------------
+{
+ byte  n,lp = pgsz >> 1;
+ word addr = page * pgsz, a = addr + lp;
+ WtRdy();
+ Wire.beginTransmission(devaddr);
+ Wire.write(addr >> 8);           
+ Wire.write(addr & 0xff);           
+ for (n = 0; n < lp; n++)
+    Wire.write(data);
+ Wire.endTransmission();
+ WtRdy();
+ Wire.beginTransmission(devaddr);
+ Wire.write(a >> 8);           
+ Wire.write(a & 0xff);           
+ for (n = 0; n < lp; n++)
+    Wire.write(data);
+ Wire.endTransmission();
+ WtRdy();
+  // verify if data read is equal  written
+ if (verify)
+    {
+     Wire.beginTransmission(devaddr);
+     Wire.write(addr >> 8);           
+     Wire.write(addr & 0xff);           
+     Wire.endTransmission();
+     Wire.requestFrom(devaddr, pgsz);
+     for (n = 0; n < pgsz; n++)
+       if (Wire.available()) 
+        if (Wire.read() != data)
+          {if (Verbose & 1)Serial.printf("\nEEVfy Err (%hx)\n",addr + n); return(false);}
+    }   
+ return (true);
 }
 // ---------------------------------------------------------------------------------------
 

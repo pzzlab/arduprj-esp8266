@@ -1,11 +1,15 @@
 #include <Wire.h>
 #include <ESP8266WiFi.h>
 
+#ifndef LED_BUILTIN
+  #define LED_BUILTIN 2
+#endif
+
 #ifndef dword
   #define dword unsigned int
 #endif
 
-
+ 
 // ============================== 24LCxxx EEPROM ===================================
 // Example of use: 
 /*    
@@ -22,28 +26,32 @@ void loop(void)
 ******** IMPORTANT ********
 Cannot be used for (write/erase) into ticker else generate panic exception.
 Handle in loop() with a global command
+
+NOTE:
+due a bug, the write function is limited to max 126 bytes (not 128)
 */
 
-class T24LCxxx
+class T24LCxxx   
 { 
  
 private:
     void  WtRdy(void);
-          byte exist,devaddr,pgsz;
+          byte exist,verify,devaddr,pgsz;
           word pgs;
-          dword lwr;                    // last write time (us)
 
 
  public:
-    bool  Begin   (unsigned short kbit, bool fast = false, byte devaddr = 0x50, byte sda_pin = 0, byte scl_pin = 2);
-    byte  GetPgSz (void ){return(pgsz);}
-    bool  PgErase (word page);
-    bool  Erase   (void);
-    word  Rd      (word addr, byte  len, void* buf); 
-    bool  Wr      (word addr, byte  len, void* buf, bool verify = false); 
-    bool  Wr      (word addr, byte  val, bool verify = false); 
-    bool  Wr      (word addr, word  val, bool verify = false); 
-    bool  Wr      (word addr, dword val, bool verify = false); 
+    bool  Begin     (unsigned short kbit, bool fast = false, byte devaddr = 0x50, byte sda_pin = 0, byte scl_pin = 2);
+    byte  GetPgSz   (void ){return(pgsz);}
+    bool  PgErase   (word page);                        // erase a page (128 bytes) (14ms)  
+    bool  PgFill    (word page, byte data);             // fill a page with a byte (used in pgerase)
+    void  SetVerify (bool state);                       // propagate the verify stare to write functions  
+    bool  Erase     (void);                             // erase the entire  eeprom and fill with 0xff (7.5s for 512)
+    word  Rd        (word addr, byte  len, void* buf);  // read a buffer [1..128] (4ms)
+    bool  Wr        (word addr, byte  len, void* buf);  // write a buffer [1..126] <bug on 24LCx?> (4..10ms)
+    bool  Wr        (word addr, byte  val);             // write a byte   (4ms)
+    bool  Wr        (word addr, word  val);             // write a word   (4ms)
+    bool  Wr        (word addr, dword val);             // write a dword  (4ms)
 };
 
 // ---------------------------------------------------------------------------------------
