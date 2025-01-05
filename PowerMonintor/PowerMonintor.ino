@@ -12,13 +12,12 @@
 
 // ------------------------------- Data Structure on Eeprom -------------------------------------
 // structure of a table:
-// +0x0000..0x000    TClock    Date;         // 8 bytes
-// +0x0008..0x000b    word      Temp,Hum;     // 4 bytes
-// +0x000c..0x000f    word      Flags,_;      // 4 bytes
-// +0x0010..0x0027    TMcp39F511Data  Mcp;    // 
-// +0x0028..0x002f    word      Time[2];      // 4 bytes
-// +0x0030..0x007f    word      _[16];        // align to 128 bytes
-// +0x0080..0x01ff    short     Wh[96][2];    // buffer (384 bytes)
+// +0x0000..0x000     byte      Mon,Day;      // 2 bytes 
+// +0x0002..0x0005    word      Vmin,Vmax;    // 4 bytes
+// +0x0006..0x0009    word      WMax[2];      // 4 bytes
+// +0x000a..0x0011    word      TimeMinMax[4];// 8 bytes
+// +0x0012..0x007f    byte      _[110];       // filler to reach 128 bytes
+// +0x0080..0x001ff   short     Log[96][2];   // 384 bytes
 //
 // ----------------- EEPROM MAPPING (128 bytes/page(4 pages for table)) -------------------------
 //
@@ -50,7 +49,8 @@
 #include <WiFiUdp.h>
 #include <NTPClient.h>
 
-#define   SERIALCMD                           // handle serial commands
+//#define   SERIALCMD                           // handle serial commands
+//#define   AUTODATE                            // autoenable date update manually (exclude clockupdate())
 
 #define   NPWR          2                     // Power Measure Zones
 #define   TIMEZONE      3600 * 1              // gmt + 1
@@ -88,7 +88,10 @@ typedef struct {
                 word            Flags,__;      // general flags, filler
                 TMcp39F511Data  Mcp;          // Mcp Data block
                 word            RSSI;         // wifi signal
-                byte            _[16];        // filler to reach 128 bytes
+                word            Wmax[2];      // peack power
+                word            Time[2];      // Time measure 
+                word            Elaps[2];     // Time elapsed
+                byte            _[2];         // filler to reach 128 bytes
                } TRtData;                     // 128 bytes
 
 typedef struct {
@@ -115,7 +118,7 @@ T24LCxxx        Eep;                          // Eeprom I2C where save data (64K
 TeeCmd          EeCmd;                        // loop handled eeprom handler
 Ticker          Tick;                         // Ticker handler
 TWebSrv         Web;                          // The WebServer with access to vars and html pages
-byte      run;
+
 // ========================================================================================
 // table containing the public vars accessible to web
 // Attribute:     Bits 0..2: 1=sint, 2=float,..,7=string;
@@ -150,62 +153,83 @@ void EeHnd(TeeCmd *p)
  word addr;
  
 if (p->Cmd & EEWRPK)
+   // at last record, save the dayly min-max values
     {
-     addr = DAYADDR + MONSIZE * (word) p->LMonx + DAYSIZE * ((word)p->LDay -1);
-
-     Log.Vmin     = Data.Mcp.Vaw.Vmin    = p->LDay;
-     Log.Vmax     = Data.Mcp.Vaw.Vmax    = p->LDay  * 5;
-     Log.Wmax[0]  = Data.Mcp.Vaw.Wmax[0] = p->LDay  *10;
-     Log.Wmax[1]  = Data.Mcp.Vaw.Wmax[1] = p->LDay  *20;
-
      // Log.TimeMinMax is already saved on cyclic()
+     Log.Vmin     = Data.Mcp.Vaw.Vmin;
+     Log.Vmax     = Data.Mcp.Vaw.Vmax;
+     Log.Wmax[0]  = Data.Mcp.Vaw.Wmax[0];
+     Log.Wmax[1]  = Data.Mcp.Vaw.Wmax[1];
+     addr = DAYADDR + MONSIZE * (word) p->LMonx + DAYSIZE * ((word)p->LDay -1);
      Eep.Wr(addr + 2 ,16 ,(byte*)&Log +2);                      // copy all 1st block
+#ifdef TESTING     
      Serial.printf("LimitsWrite: (%4hx) %5hd %5hd %5hd %5hd\n", addr, Log.Vmin, Log.Vmax, Log.Wmax[0], Log.Wmax[1]); 
+ #endif     
      p->Cmd &= ~EEWRPK;       
     }
 
  if (p->Cmd & EEMCLR)
     {
+     // at 0.00 
      addr = DAYADDR + MONSIZE * (word) p->Monx;
+#ifdef TESTING     
      Serial.printf("Erase [%hd] (%4hx ->",p->Monx, addr);
-     for (word lp =0; lp < 4 * 31; lp++, addr += 128)      // loop for 4 pages * 31 days
-         Eep.PgErase(addr); 
-     Serial.printf("%4hx\n",addr-1);
+#endif
+     // 0xff fill remaining pages
+     for (byte lp =0; lp < 31; lp++)      // loop for 31 days
+        {
+         // Zero fill 1st page (+00.. +0x7f)
+         Eep.PgFill(addr >> 7,0); addr += 128;
+         Eep.PgErase(addr >> 7);  addr += 128;
+         Eep.PgErase(addr >> 7);  addr += 128;
+         Eep.PgErase(addr >> 7);  addr += 128;
+        }
+#ifdef TESTING     
+      Serial.printf("%4hx\n",addr-1);
+ #endif      
      p->Cmd &= ~EEMCLR;       
     }
      
 if (p->Cmd & EEWRCR)
     {
-     
+      // write creation date (mon,day)
      addr = DAYADDR + MONSIZE * (word) p->Monx + DAYSIZE * ((word)p->LDay -1);
-     Log.Day      = Data.Clk.Day; Log.Mon = Data.Clk.Mon; 
-     Log.Vmin = Log.Vmax = Log.Wmax[0] = Log.Wmax[1] = 0;   // reset limits
+     Log.Day  = Data.Clk.Day;   Log.Mon = Data.Clk.Mon; 
+     Log.Vmin = 500;            Log.Vmax = Log.Wmax[0] = Log.Wmax[1] = 0;   // reset limits (updated autmarically)
+     Data.Mcp.Vaw.Vmin = 500;   Data.Mcp.Vaw.Vmax = Data.Mcp.Vaw.Wmax[0] = Data.Mcp.Vaw.Wmax[1] = 0;
+     Data.Wmax[0] =             Data.Time[0] = Data.Elaps[0] = 0;
+     Data.Wmax[1] =             Data.Time[1] = Data.Elaps[1] = 1;
      Eep.Wr(addr, 2 , (byte*)&Log);
+#ifdef TESTING     
      Serial.printf("DyCreate: %hhd-%hhd (%4hx)\n",Log.Day,Log.Mon, addr); 
-//     Eep.Rd(addr, 14,&Data.__); 
-//     Serial.printf("Rd: %hhd-%hhd \n",Data.__[1],Data.__[2]); 
+#endif     
      p->Cmd &= ~EEWRCR;       
     }
- else     
+
 if (p->Cmd & EEWRPW)
     {
+     // write ONE record of power (every 15 min)
      short *d = (short*)p->Data;
      Eep.Wr(p->Addr, 4, p->Data);
+#ifdef TESTING     
      Serial.printf("[%2hhd.%2hhd][%2hhd] (%4hx) %5hd %5hd\n",p->Monx, p->LDay, p->Idx, p->Addr,d[0],d[1]);
+ #endif
      p->Cmd &= ~EEWRPW;       
     }
 
  if (p->Cmd & EEDYRD)
     {
+     // Read the entire log (overlat actual, will be restored at 1st 15 min)
      byte *d = (byte*)&Log;
      addr = p->Addr;
+#ifdef TESTING     
      Serial.printf("Rd: [%4hx ->",addr);
+#endif
      for (word lp = 0; lp < 4; lp++, addr += 128 , d += 128)      // loop for 3 pages
           Eep.Rd(addr, 128,d);
-         Serial.printf("%4hx]\n",addr-1);
-    word *p1 = (word*)&Log;
-     for (word n = 0; n < 256; n++) 
-          Serial.printf("[%2hd] %4hx\n",n,p1[n]);
+#ifdef TESTING     
+     Serial.printf("%4hx]\n",addr-1);
+ #endif     
      p->Cmd &= ~EEDYRD;       
     }
 }
@@ -224,42 +248,28 @@ void Cyclic(void)
 {
   static  int   lwh[2];
   static  short n[2];
-  static  byte  lday,lmon,lidx = 255;       // -1 force an update at 1st call
+  static  byte  lday,lmon,lmin,lidx = 255;       // -1 force an update at 1st call
           int   wh[2];
           byte  idx,mon;  
   
-  // Get MCP data
-  // Mcp.Poll();       // comment to have the terminal available
 
-    if (run) Data.Clk.Min += 15; 
+#ifdef AUTODATE
+  if (Data.Clk.Min  > 59)   {Data.Clk.Min  = 0; Data.Clk.Hour++;}
+  if (Data.Clk.Hour > 23)   {Data.Clk.Hour = 0; Data.Clk.Day++; Data.Clk.Yday++;}
+  if (Data.Clk.Day  > 31)   {Data.Clk.Day = 1;}
+  if (Data.Clk.Yday > 365)  {Data.Clk.Yday = 0; Data.Clk.Year++;}
+ #else
+    // Get MCP data
+    Mcp.Poll();       // comment to have the terminal available
+#endif
 
-    if (Data.Clk.Min  > 59)   {Data.Clk.Min  = 0; Data.Clk.Hour++;}
-    if (Data.Clk.Hour > 23)   {Data.Clk.Hour = 0; Data.Clk.Day++; Data.Clk.Yday++;}
-    if (Data.Clk.Day  > 31)   {Data.Clk.Day = 1; run = 2;}
-    if (Data.Clk.Yday > 365)  {Data.Clk.Yday = 0; Data.Clk.Year++;}
-
-
-  // Update the min/max values and time
-  word tm = (word) Data.Clk.Hour * 256 + Data.Clk.Min;
-  if (Data.Mcp.Vaw.Vmin    < Log.Vmin)    {Log.Vmin = Data.Mcp.Vaw.Vmin;        Log.TimeMinMax[0] = tm;}
-  if (Data.Mcp.Vaw.Vmax    > Log.Vmax)    {Log.Vmax = Data.Mcp.Vaw.Vmax;        Log.TimeMinMax[1] = tm;}
-  if (Data.Mcp.Vaw.Wmax[0] > Log.Wmax[0]) {Log.Wmax[0] = Data.Mcp.Vaw.Wmax[0];  Log.TimeMinMax[2] = tm;}
-  if (Data.Mcp.Vaw.Wmax[1] > Log.Wmax[1]) {Log.Wmax[1] = Data.Mcp.Vaw.Wmax[1];  Log.TimeMinMax[3] = tm;}
-  
   // index of table (96 elements,zero based)          // bugfix (never happen)
   idx = Data.Clk.Hour * 4 + Data.Clk.Min / 15 -1;     if (idx > 95) idx = 95;
   mon = (Data.Clk.Mon -1) & 0x3;
   // at boot save the actual date and index (do nothint @ 1st call)
   if (lidx == 255)     {lidx = idx; lday = Data.Clk.Day; lmon = mon; return;}
 
-  if (run)
-    {
 
-      Data.Mcp.Wh.Pi[0] = (Data.Clk.Day-1) * 100 + idx; if (idx == 95) Data.Mcp.Wh.Pi[0] -= 100;
-      Data.Mcp.Wh.Pi[1] = Data.Mcp.Wh.Pi[0] /2;
-      lwh[0] = lwh[1] = 0;
-      if (run == 2)   run = 0;
-    }
   // ---- at every change (15 min update the current log (on ram)) ----
   if (idx != lidx)
     {
@@ -287,13 +297,27 @@ void Cyclic(void)
      lmon = mon;
     }                                                 
 
+  // timer energy ( elapsed time)
+  if (lmin != Data.Clk.Min)   {lmin = Data.Clk.Min; Data.Elaps[0]++; Data.Elaps[1]++;}
+
+  // Update the min/max values and time event
+  word tm = (word) Data.Clk.Hour * 256 + Data.Clk.Min;
+  if (Data.Mcp.Vaw.Vmin    < Log.Vmin)    {Log.Vmin = Data.Mcp.Vaw.Vmin;        Log.TimeMinMax[0] = tm;}
+  if (Data.Mcp.Vaw.Vmax    > Log.Vmax)    {Log.Vmax = Data.Mcp.Vaw.Vmax;        Log.TimeMinMax[1] = tm;}
+  if (Data.Mcp.Vaw.Wmax[0] > Log.Wmax[0]) {Log.Wmax[0] = Data.Mcp.Vaw.Wmax[0];  Log.TimeMinMax[2] = tm;}
+  if (Data.Mcp.Vaw.Wmax[1] > Log.Wmax[1]) {Log.Wmax[1] = Data.Mcp.Vaw.Wmax[1];  Log.TimeMinMax[3] = tm;}
+  // also relative 
+  if (Data.Wmax[0] < Data.Mcp.Vaw.W[0])   {Data.Wmax[0] = Data.Mcp.Vaw.W[0];    Data.Time[0] = tm;}
+  if (Data.Wmax[1] < Data.Mcp.Vaw.W[1])   {Data.Wmax[1] = Data.Mcp.Vaw.W[1];    Data.Time[1] = tm;}
+
+
   // propagate auth. level
   if (Auth) Data.Flags |= Auth & 0x3; 
    else     Data.Flags &= ~0x3;
   //  
   // propagate the command read table on buffer
   //.....
-  Data.RSSI = WiFi.RSSI();
+  Data.RSSI = 234; WiFi.RSSI();
 }
 
 // ========================================================================================
@@ -306,19 +330,35 @@ bool CmdCallBack(byte code, char *txt)
 // execute a webserver command callback
 // ------------------------------------
 {
- if (code == 2)  
+ switch (code)
     {
-     word v;  
-     if (sscanf(txt,"%hd",&v))
-        { 
-         MIdx = v >> 8; DIdx = v & 0x7f;
-         Serial.printf("M%02hhd:D%02hhd\n",MIdx,DIdx);
-         EeCmd.Addr = DAYADDR + MONSIZE * ((word) MIdx -1) + DAYSIZE * ((word)DIdx -1); 
-         EeCmd.Data = &Log; 
-         EeCmd.Cmd |= EEDYRD;
-        }
-    }  
- if (code == 90) return(Mcp.Parse(txt));
+      case  1:  // Reset Power #1
+                Data.Wmax[0] = 0;
+                Data.Time[0] = 0;
+                Data.Elaps[0] = 0;
+                break;
+      case  2:  // Reset Power #1
+                Data.Wmax[1] = 0;
+                Data.Time[1] = 0;
+                Data.Elaps[1] = 0;
+                break;
+      case  10: // set log index
+                word v;  
+                if (sscanf(txt,"%hd",&v))
+                  { 
+                  MIdx = v >> 8; DIdx = v & 0x7f;
+#ifdef TESTING     
+                  Serial.printf("M%02hhd:D%02hhd\n",MIdx,DIdx);
+ #endif
+                  EeCmd.Addr = DAYADDR + MONSIZE * ((word) MIdx -1) + DAYSIZE * ((word)DIdx -1); 
+                  EeCmd.Data = &Log; 
+                  EeCmd.Cmd |= EEDYRD;
+                  }
+                break;
+      case  90: // Mcp Services command
+                return(Mcp.Parse(txt));
+                break;
+    }
 return(false);
 }
 
@@ -403,22 +443,34 @@ void loop(void)
               }  
           }
         else
-        if (!strncmp(buf,"fmt",3)) {Serial.print("Fmt..");if (!Eep.Erase()) Serial.println("Fmt Error"); Serial.println(" Done");}
+        if (sscanf(buf,"fmt %hd",&n) == 1)      {EeCmd.Monx = n; EeCmd.Cmd = EEMCLR;}
         else
-        if (sscanf(buf,"pf %hd",&n) == 1)      {if (!Eep.PgErase(n)) Serial.println("Pgfmt Error");}
-       else
-        if (buf[0] == 'f') run = 1;
-       else
-        if (buf[0] == 'h') run = 0;
-       else
         if (buf[0] == 'i') Data.Clk.Min ++;
        else
-        if (buf[0] == 'c') {memset(&Log,0,sizeof(Log)); Data.Clk.Mon = Data.Clk.Day = 1; Data.Clk.Hour = 0; Data.Clk.Min = 0;}
+        if (buf[0] == 'd') {Data.Clk.Hour = 23; Data.Clk.Min = 30;}
+       else
+        if (buf[0] == 'm') {Data.Clk.Day = 31; Data.Clk.Hour = 23; Data.Clk.Min = 30;}
        else
       if (sscanf(buf,"%hd %hd",&a,&b))
        {
-         if (a < 0) Data.Mcp.Wh.Po[0] += a; else  Data.Mcp.Wh.Pi[0] += a;
-         if (b < 0) Data.Mcp.Wh.Po[1] += b; else  Data.Mcp.Wh.Pi[1] += b;
+         if (a < 0) 
+            {
+              Data.Mcp.Wh.Po[0] += a; 
+            }  
+           else  
+              {
+                Data.Mcp.Wh.Pi[0] += a;
+                Data.Mcp.Vaw.W[0] = a;
+              }  
+         if (b < 0) 
+            {
+              Data.Mcp.Wh.Po[1] += b; 
+            }  
+           else  
+              {
+                Data.Mcp.Wh.Pi[1] += b;
+                Data.Mcp.Vaw.W[1] = b;
+              }  
          Data.Clk.Min +=15;              
        }
     }
@@ -436,11 +488,13 @@ void loop(void)
                     if (!Eep.Begin(512,true))  Serial.println("EEprom Init Failed");
                     // Start AHT21 temp. and Humidity sensor
                     if (!Aht21.Begin(true))    Serial.println("AHT21 Init Failed, Temp. and Hum. unavailable");
-                    Tick.attach_ms(50,Cyclic);
+                    Tick.attach_ms(250,Cyclic);
                     Boot++; 
                     break;
           case  3:  // dummy 
-//                    Boot++;
+#ifndef   AUTODATE
+                    Boot++;
+ #endif                    
                     break;
           default:  // any other case
                     // Update global time (or continue from itself)
@@ -457,7 +511,5 @@ void loop(void)
    //  Eeprom handler, MUST be in loop because blocking functions generate exception
    EeHnd(&EeCmd);
   // EatTime loop
-
-  delay(10);
- 
+  delay(50);
 }                     // EndLoop

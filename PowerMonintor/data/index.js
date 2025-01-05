@@ -2,7 +2,7 @@ const NPWR = 2, NMIN = 15,NHOURW = 2, NHOURM = 8, NDAYY = 4;
 Months = [31,28,31,30,31,30,31,31,30,31,30,31];
 var Tmr, Errors = 0, XhrReq = 0, Cyc = 10, Nxtcyc = 10, EveryN = 0, Auth = 0;
 var Chart, Wh = [0], VMin = 0, VMax= 0, WMax = [0,0], X = 0, Y = 0, Lmin = 0, LogIdx = 0, ClkMin = -1;
-var Http , Day = 0, Month = 0, day = 1, month = 1, GetLog = 0;
+var Http , Day = 0, Month = 0, day = 1, month = 1, GetLog = 0,ReloadLog = 0;
  
 // 	---- AT OPEN PAGE ----
 function EntryPage()								
@@ -26,8 +26,9 @@ function Cyclic()
   {document.getElementById('msg').value  += '.'; GetLog--; if (GetLog == 1) Cyc = 30;}
 
  // update log @ every 5 minutes reforcing actual date
- if ((Cyc == 10) && ClkMin && (!(ClkMin -= Lmin) % 5))
-  {Lmin = ClkMin; LogIdx = Number(Month) * 256 + Number(Day); Cyc = 20;}
+ if ((Cyc == 10) && (Lmin != ClkMin) && !(ClkMin % 5))
+	{Lmin = ClkMin; NavigateLog(0);}
+// {Lmin = ClkMin; LogIdx = Number(Month) * 256 + Number(Day); Cyc = 30;}
 	
  // communication hander: write(read) the goto an 
  switch (Cyc)
@@ -50,7 +51,7 @@ function Cyclic()
 
 		 case 30:	// Write Command #2 LogIdx codified as byte with month << 8 + day
 					NxtCyc = 20;
-					SendCmd(2,LogIdx);
+					SendCmd(10,LogIdx);
 					Cyc = 0; 
 					break;
 
@@ -72,7 +73,7 @@ function Cyclic()
 
 function DecodeData(http)	// ---- DECODE AND DISPLAY DATA BLOCK ----
 {
- pf=[0,0], am=[0,0], w=[0,0], wr=[0,0], whi=[0,0], who=[0,0], tm=[0,0], wmi=[0,0], wmo=[0,0], valid=false;
+ pf=[0,0], am=[0,0], w=[0,0], wr=[0,0], whi=[0,0], who=[0,0], tm=[0,0], wmx=[0,0], el=[0,0], valid=false;
  // TClock decoding
  a = new Uint8Array(http.response);	ofs = 0;
  Year	= a.slice(ofs, ofs + 1);	ofs ++;
@@ -105,12 +106,12 @@ function DecodeData(http)	// ---- DECODE AND DISPLAY DATA BLOCK ----
  WMax[1]= a.slice(ofs, ofs + 1);	ofs ++;
  wr[0]	= a.slice(ofs, ofs + 1);	ofs ++; 
  wr[1]	= a.slice(ofs, ofs + 1);	ofs ++;
- a = new Uint32Array(http.response);ofs /= 2;	// Wh
+ a = new Uint32Array(http.response);ofs /= 2;
  whi[0]	= a.slice(ofs, ofs + 1);	ofs ++; 
  whi[1]	= a.slice(ofs, ofs + 1);	ofs ++;
  who[0]	= a.slice(ofs, ofs + 1);	ofs ++; 
  who[1]	= a.slice(ofs, ofs + 1);	ofs ++; 
- a = new Uint16Array(http.response);ofs *= 2;	// Misc Data
+ a = new Uint16Array(http.response);ofs *= 2;	
  comms	= a.slice(ofs, ofs + 1);	ofs ++; 
  lost	= a.slice(ofs, ofs + 1);	ofs ++; 
  chk   	= a.slice(ofs, ofs + 1);	ofs ++; 
@@ -119,13 +120,19 @@ function DecodeData(http)	// ---- DECODE AND DISPLAY DATA BLOCK ----
  device	= a.slice(ofs, ofs + 1);	ofs ++; 
  valid	= a.slice(ofs, ofs + 1);	ofs ++;
  a = new Int16Array(http.response); ofs /= 2;
- deb 	= a.slice(ofs, ofs + 17);	ofs +=17;	// debug buffer
- rssi 	= a.slice(ofs, ofs + 1);	ofs ++;
-
+ deb 	= a.slice(ofs, ofs + 17);	ofs +=17;	
+ rssi 	= a.slice(ofs, ofs + 1);	ofs ++;		
+ // Data
+ wmx[0]	= a.slice(ofs, ofs + 1);	ofs ++;
+ wmx[1]	= a.slice(ofs, ofs + 1);	ofs ++;
+ tm[0]	= a.slice(ofs, ofs + 1);	ofs ++;
+ tm[1]	= a.slice(ofs, ofs + 1);	ofs ++;
+ el[0]	= a.slice(ofs, ofs + 1);	ofs ++;
+ el[1]	= a.slice(ofs, ofs + 1);	ofs ++;
+ 
  Auth  	= flags & 0x3;	// copy Ws::Auth(copied into Data) to JS var
  ClkMin = Number(min);
- device ='78';	// force for run without device connected
-
+ 
  // show/hide debug area and diplay values
  d = document.getElementById('dbgtxt');
  if (document.getElementById('dbg').checked)
@@ -138,7 +145,8 @@ function DecodeData(http)	// ---- DECODE AND DISPLAY DATA BLOCK ----
   else    	d.style.display = 'none';
 
  // update the datetime,temp and hum.
- document.getElementById('now').innerHTML = Day + "-" + Month + "-" + (Number(Year) + Number(1900)) + " / " + hour + ":" + min.toString().padStart(2,'0') + "." + sec;
+ document.getElementById('now').innerHTML = Day + "-" + Month + "-" + (Number(Year) + Number(1900)) + " / " + hour + ":" + min.toString().padStart(2,'0') 
+ 										  + "." + Number(sec).toString().padStart(2,'0');
  document.getElementById('temphum').innerHTML = 'T= ' + (temp/10).toFixed(1) + '\xb0C  H=' + hum + '% ';
  // Show the runtime data if recognized
  if (valid && ((device == '65') || (device == '78')))	
@@ -151,9 +159,9 @@ function DecodeData(http)	// ---- DECODE AND DISPLAY DATA BLOCK ----
 	  document.getElementById('pf'	+ Number(i)).innerHTML	= (pf[i]  / 32767).toFixed(2);
 	  document.getElementById('a'	+ Number(i)).innerHTML	= (am[i]  / 1000).toFixed(3);
 	  document.getElementById('w'	+ Number(i)).innerHTML	= (w[i]   / 100).toFixed(1);
-	  document.getElementById('wmi'+ Number(i)).innerHTML	= (wmi[i] / 100).toFixed(1);
-	  document.getElementById('wmo'+ Number(i)).innerHTML	= (wmo[i] / 100).toFixed(1);
-	  document.getElementById('t'	+ Number(i)).innerHTML	= (tm[i]  / 60).toFixed(1);
+	  document.getElementById('wmx' + Number(i)).innerHTML	= (wmx[i] / 100).toFixed(1);
+	  document.getElementById('tm'  + Number(i)).innerHTML	= (tm[i] >> 8) + ":" + (tm[i] & 0x7f) .toString().padStart(2,'0')
+	  document.getElementById('t'	+ Number(i)).innerHTML	= (el[i] >> 8) + ":" + (el[i] & 0x7f) .toString().padStart(2,'0')
 	  document.getElementById('p'	+ Number(i)).innerHTML	= (whi[i] / 1000).toFixed(0);
 	  document.getElementById('q' 	+ Number(i)).innerHTML	= (who[i] / 1000).toFixed(0);
 	 }
@@ -204,6 +212,7 @@ function NavigateLog(idx)
  document.getElementById('nav2').value = String(day + '/' + month);
  document.getElementById('msg').value  = "Wait for selected Data (~ 2.5 secs)";
  GetLog = 5;									// 2.5 secs idle time (@500ms cycle time)
+ RealoadLog = 1;								// force to reload log
 }
 
 // callback of canvas "onclick"
@@ -218,7 +227,7 @@ function ChartClick()
 function PlotChart()								
 {
  if (Http == undefined) return;
- wmax=[0,0],tm[0,0,0,0];
+ wmax=[0,0],tm=[0,0,0,0];
  // TClock decoding
  a = new Uint8Array(Http.response); ofs = 0;
  mo		= a.slice(ofs, ofs + 1);	ofs ++;
@@ -230,6 +239,7 @@ function PlotChart()
  wmax[1]= a.slice(ofs, ofs + 1);	ofs ++;
  tm		= a.slice(ofs, ofs + 4);	ofs +=4;  	// minmax time
  __		= a.slice(ofs, ofs + 55);	ofs +=55; 	// unused filler
+ a = new Int16Array(Http.response);	
  Wh	    = a.slice(ofs, ofs + 192);				// log records [96[2]]
  // normalize the values to +/-32767 (-1 will be zero)
  for (i = 0; i < 192; i+=2) {if (Wh[i + 0] < 0) Wh[i + 0]++; if (Wh[i + 1] < 0) Wh[i + 1]++;}
@@ -252,7 +262,7 @@ function PlotChart()
  scy[0] = (h-2) / max[0]; scy[1] = (h-2) / max[1];
  xlim -= dx; if (X < 0) X = 0; if (X > xlim) X = xlim;
  idx = Math.floor(X / dx) * 2; // *2 because samp * 2
- cx = undefined,v;
+ cx = undefined; v = 0;
  // plot bars
  for (x = i = 0; i < maxidx; i+=2, x += dx)
   {
